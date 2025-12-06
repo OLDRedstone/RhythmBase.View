@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="RhythmBase.View.Test1/RhythmBase.View.Test1.csproj" />
+  <Project Path="RhythmBase.View/RhythmBase.View.csproj" />
+</Solution>
