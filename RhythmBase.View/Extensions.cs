@@ -275,6 +275,8 @@ public static class Extensions
 								break;
 						}
 					}
+					if(style is { Active:true, Hover: true })
+						canvas.DrawSlice("event_beat_loop", new SKPoint(destRect.Right, destRect.Top), style.Scale);
 				}
 				break;
 			case Comment comment:
