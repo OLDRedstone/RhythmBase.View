@@ -174,8 +174,6 @@ public static class Extensions
 				throw new NotImplementedException();
 			}
 		}
-		const string outline = "event_outline";
-		const string back = "event_back";
 		const string pulse = "event_beat_pulse";
 		const string hit = "event_beat_hit";
 		const string hitf = "event_beat_hit_freeze";
@@ -229,14 +227,14 @@ public static class Extensions
 					float interval = oneshotBeat.Interval;
 					int loop = (int)oneshotBeat.Loops;
 					int subdiv = oneshotBeat.Subdivisions;
-					float delay = oneshotBeat.FreezeBurnMode is OneshotTypes.Freezeshot ? oneshotBeat.Delay : 0;
+					float delay = oneshotBeat.FreezeBurnMode is OneshotType.Freezeshot ? oneshotBeat.Delay : 0;
 					destRect = SKRect.Create(dest.X, dest.Y, iconSize * scale * (loop * interval + tick + delay), iconSize * scale);
 					canvas.DrawBack(destRect, ColorOf(evt.Tab).WithState(isActive, evt.Active), isActive, scale);
 					float subdivwidth = iconSize * scale * (subdiv - 1) / subdiv * tick;
 					if (subdiv > 1)
 						canvas.DrawSlice(evbarea,
 							SKRect.Create(dest.X + destRect.Width, dest.Y, subdivwidth, info.Bounds.Height * scale),
-							isActive ? 0xffd046f3 : 0xff7e3990, scale, PatchStyle.Strentch);
+							0xff13B021, scale, PatchStyle.Repeat);
 					if (oneshotBeat.Skipshot)
 					{
 						canvas.DrawSlice(evbarea,
@@ -252,7 +250,7 @@ public static class Extensions
 							canvas.DrawSlice(hit, new SKPoint(dest.X + scale * (iconSize * (l * interval + delay + tick + (i * tick / subdiv)) - 1), dest.Y), scale);
 
 					float off = interval - tick;
-					if (oneshotBeat.FreezeBurnMode is not OneshotTypes.Wave)
+					if (oneshotBeat.FreezeBurnMode is not OneshotType.Wave)
 					{
 						float posx = dest.X - off * scale * iconSize;
 						canvas.DrawSlice(beatcross,
@@ -260,7 +258,7 @@ public static class Extensions
 							scale);
 						switch (oneshotBeat.FreezeBurnMode)
 						{
-							case OneshotTypes.Freezeshot:
+							case OneshotType.Freezeshot:
 								posx += delay * scale * iconSize;
 								canvas.DrawSlice(beatcross,
 									new SKPoint(posx, dest.Y),
@@ -268,7 +266,7 @@ public static class Extensions
 								for (int l = 0; l <= loop; l++)
 									canvas.DrawSlice(hitf, new SKPoint(dest.X + scale * (iconSize * (l * interval + tick) - 1), dest.Y), scale);
 								break;
-							case OneshotTypes.Burnshot:
+							case OneshotType.Burnshot:
 								posx -= tick * scale * iconSize;
 								canvas.DrawSlice(beatcross,
 									new SKPoint(posx, dest.Y),
@@ -285,12 +283,30 @@ public static class Extensions
 			case Comment comment:
 				{
 					SKColor color = (uint)(comment.Color.Value);
+					destRect = SKRect.Create(dest.X, dest.Y, info.Bounds.Width * scale, info.Bounds.Height * scale);
 					canvas.DrawBack(
-						SKRect.Create(dest.X, dest.Y, info.Bounds.Width * scale, info.Bounds.Height * scale),
+						destRect,
 						color.WithState(isActive, evt.Active),
 						isActive,
 						scale);
 					canvas.DrawSlice(key, dest, scale);
+				}
+				break;
+			case DesktopColor desktopColor:
+				{
+					SKColor color = (uint)(desktopColor.StartColor?.Value ?? RDColor.Transparent);
+					destRect = SKRect.Create(dest.X, dest.Y, info.Bounds.Width * scale, info.Bounds.Height * 4 * scale);
+					canvas.DrawBack(
+						destRect,
+						ColorOf(desktopColor.Tab).WithState(isActive, evt.Active),
+						isActive,
+						scale);
+					canvas.DrawSlice($"{key}_0", dest with { Y = dest.Y + info.Bounds.Height * scale }, ToSKColor(desktopColor.EndColor?.Value ?? RDColor.Transparent), scale);
+					canvas.DrawSlice(key, dest with { Y = dest.Y + info.Bounds.Height * scale }, scale);
+					float duration = desktopColor.Duration;
+					canvas.DrawSlice(evbarea,
+						SKRect.Create(dest.X + destRect.Width, dest.Y, scale * (iconSize * duration - info.Bounds.Width), destRect.Height),
+						ColorOf(evt.Tab).WithAlpha(isActive ? (byte)192 : (byte)91), scale, PatchStyle.Repeat);
 				}
 				break;
 			case PulseFreeTimeBeat pulseFreeTimeBeat:
@@ -318,6 +334,15 @@ public static class Extensions
 				destRect = SKRect.Create(dest.X, dest.Y, iconSize * scale, iconSize * 4 * scale);
 				canvas.DrawBack(destRect, ColorOf(evt.Tab).WithState(isActive, evt.Active), isActive, scale);
 				foreach (var r in reorderRooms.Order.Order)
+				{
+					canvas.DrawSlice($"{key}_{r}", dest, scale);
+					dest.Offset(0, iconSize * scale);
+				}
+				break;
+			case ReorderWindows reorderWindows:
+				destRect = SKRect.Create(dest.X, dest.Y, iconSize * scale, iconSize * 4 * scale);
+				canvas.DrawBack(destRect, ColorOf(evt.Tab).WithState(isActive, evt.Active), isActive, scale);
+				foreach (var r in reorderWindows.Order.Order)
 				{
 					canvas.DrawSlice($"{key}_{r}", dest, scale);
 					dest.Offset(0, iconSize * scale);
@@ -372,7 +397,7 @@ public static class Extensions
 					float top = iconSize * scale / 2 - info2.Bounds.Height * s / 2;
 					foreach (var p in setRowXs.Pattern)
 					{
-						if (p is Patterns.X)
+						if (p is Pattern.X)
 							canvas.DrawSlice(beatx, SKRect.Create(
 								dest.X + left, dest.Y + top,
 								width, info2.Bounds.Height * s), scale);
@@ -444,10 +469,10 @@ public static class Extensions
 						canvas.DrawSlice(key, dest, ToSKColor(paintHands.TintColor), scale);
 						switch (paintHands.Border)
 						{
-							case Borders.Outline:
+							case Border.Outline:
 								canvas.DrawSlice($"{key}_0", dest, ToSKColor(paintHands.BorderColor), scale);
 								break;
-							case Borders.Glow:
+							case Border.Glow:
 								canvas.DrawSlice($"{key}_1", dest, ToSKColor(paintHands.BorderColor), scale);
 								break;
 						}
@@ -457,12 +482,12 @@ public static class Extensions
 							canvas.DrawSlice(key, dest, scale);
 							switch (setBackgroundColor.BackgroundType)
 							{
-								case BackgroundTypes.Color:
+								case BackgroundType.Color:
 									canvas.DrawSlice($"{key}_0", dest,
 										ToSKColor(setBackgroundColor.Color),
 										scale);
 									break;
-								case BackgroundTypes.Image:
+								case BackgroundType.Image:
 									canvas.DrawSlice($"{key}_0", dest, SKColors.White, scale);
 									if (setBackgroundColor.Images.Count == 0 || !AssetManager._slices.TryGetValue($"{key}_1", out SliceInfo info2))
 										break;
@@ -501,10 +526,10 @@ public static class Extensions
 						canvas.DrawSlice(key, dest, ToSKColor(tint.TintColor), scale);
 						switch (tint.Border)
 						{
-							case Borders.Outline:
+							case Border.Outline:
 								canvas.DrawSlice($"{key}_0", dest, ToSKColor(tint.BorderColor), scale);
 								break;
-							case Borders.Glow:
+							case Border.Glow:
 								canvas.DrawSlice($"{key}_1", dest, ToSKColor(tint.BorderColor), scale);
 								break;
 						}
@@ -513,10 +538,10 @@ public static class Extensions
 						canvas.DrawSlice(key, dest, ToSKColor(tintRows.TintColor), scale);
 						switch (tintRows.Border)
 						{
-							case Borders.Outline:
+							case Border.Outline:
 								canvas.DrawSlice($"{key}_0", dest, ToSKColor(tintRows.BorderColor), scale);
 								break;
-							case Borders.Glow:
+							case Border.Glow:
 								canvas.DrawSlice($"{key}_1", dest, ToSKColor(tintRows.BorderColor), scale);
 								break;
 						}
@@ -662,17 +687,17 @@ public static class Extensions
 			}
 		}
 	}
-	internal static SKColor ColorOf(Tabs tab)
+	internal static SKColor ColorOf(Tab tab)
 	{
 		return tab switch
 		{
-			Tabs.Sounds => 0xffd82433,
-			Tabs.Rows => 0xff2c4fd9,
-			Tabs.Actions => 0xffc543b3,
-			Tabs.Rooms => 0xffd8b812,
-			Tabs.Decorations => 0xff00c459,
-			Tabs.Windows => 0xff50b5d7,
-			Tabs.Unknown or _ => 0xff50b5d7,
+			Tab.Sounds => 0xffd82433,
+			Tab.Rows => 0xff2c4fd9,
+			Tab.Actions => 0xffc543b3,
+			Tab.Rooms => 0xffd8b812,
+			Tab.Decorations => 0xff00c459,
+			Tab.Windows => 0xff50b5d7,
+			Tab.Unknown or _ => 0xff50b5d7,
 		};
 	}
 	private static SKColor ToSKColor(RDColor color) => new((uint)color);

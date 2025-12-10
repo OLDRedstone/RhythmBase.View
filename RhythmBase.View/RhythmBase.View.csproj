@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>obugs</Authors>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>RhythmBase.View</Title>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="RhythmBase" Version="1.2.18-patch.2" />
+    <PackageReference Include="RhythmBase" Version="1.3.1" />
     <PackageReference Include="SkiaSharp" Version="3.119.1" />
   </ItemGroup>
 
