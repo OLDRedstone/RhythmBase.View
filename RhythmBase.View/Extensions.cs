@@ -275,7 +275,7 @@ public static class Extensions
 								break;
 						}
 					}
-					if(style is { Active:true, Hover: true })
+					if (style is { Active: true, Hover: true })
 						canvas.DrawSlice("event_beat_loop", new SKPoint(destRect.Right, destRect.Top), style.Scale);
 				}
 				break;
@@ -302,10 +302,6 @@ public static class Extensions
 						style.Scale);
 					canvas.DrawSlice($"{key}_0", dest with { Y = dest.Y + info.Bounds.Height * style.Scale }, ToSKColor(desktopColor.EndColor?.Value ?? RDColor.Transparent), style.Scale);
 					canvas.DrawSlice(key, dest with { Y = dest.Y + info.Bounds.Height * style.Scale }, style.Scale);
-					float duration = desktopColor.Duration;
-					canvas.DrawSlice(evbarea,
-						SKRect.Create(dest.X + destRect.Width, dest.Y, style.Scale * (iconSize * duration - info.Bounds.Width), destRect.Height),
-						ColorOf(evt.Tab).WithAlpha(style.Active ? (byte)192 : (byte)91), style.Scale, PatchStyle.Repeat);
 				}
 				break;
 			case PulseFreeTimeBeat pulseFreeTimeBeat:
@@ -549,14 +545,16 @@ public static class Extensions
 						canvas.DrawBitmap(AssetManager._assetFile, info.Bounds, destRect);
 						break;
 				}
-				if (evt is IDurationEvent durationEvent && style.Active)
-				{
-					float duration = durationEvent.Duration;
-					canvas.DrawSlice(evbarea,
-						SKRect.Create(dest.X + destRect.Width, dest.Y, style.Scale * (iconSize * duration - info.Bounds.Width), info.Bounds.Height * style.Scale),
-						ColorOf(evt.Tab).WithAlpha(style.Active ? (byte)192 : (byte)91), style.Scale, PatchStyle.Repeat);
-				}
 				break;
+		}
+		if (evt is IDurationEvent durationEvent && style.Active)
+		{
+			float duration = durationEvent.Duration;
+			float durwidth = style.Scale * iconSize * duration - destRect.Width;
+			if (durwidth > 0)
+			canvas.DrawSlice(evbarea,
+				SKRect.Create(dest.X + destRect.Width, dest.Y, durwidth, destRect.Height),
+				ColorOf(evt.Tab).WithAlpha(style.Active ? (byte)192 : (byte)91), style.Scale, PatchStyle.Repeat);
 		}
 		if (evt.Condition.HasValue)
 		{
