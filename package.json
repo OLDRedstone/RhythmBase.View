@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.51"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.2"
+  }
+}
