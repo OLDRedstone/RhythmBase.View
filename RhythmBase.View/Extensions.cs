@@ -694,10 +694,10 @@ public static class Extensions
 			Tab.Rooms => 0xffd8b812,
 			Tab.Decorations => 0xff00c459,
 			Tab.Windows => 0xff50b5d7,
-			Tab.Unknown or _ => 0xff50b5d7,
+			Tab.Unknown or _ => 0xff848484,
 		};
 	}
-	private static SKColor ToSKColor(RDColor color) => new((uint)color);
+	private static SKColor ToSKColor(RDColor color) => (uint)color;
 	private static int LengthOf(SayReadyGetSetGoWords words)
 	{
 		return words switch
