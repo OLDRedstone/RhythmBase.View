@@ -311,13 +311,13 @@ public static class Extensions
 					canvas.DrawBack(destRect, new SKColor(beatcolor).WithState(style.Active, style.Enabled ?? evt.Active), style.Active, style.Scale);
 					canvas.DrawRDFontText(pulseFreeTimeBeat.Action switch
 					{
-						PulseActions.Increment => ">",
-						PulseActions.Decrement => "<",
-						PulseActions.Remove => "x",
-						PulseActions.Custom or
+						PulseAction.Increment => ">",
+						PulseAction.Decrement => "<",
+						PulseAction.Remove => "x",
+						PulseAction.Custom or
 						_ => (pulseFreeTimeBeat.CustomPulse + 1).ToString(),
 					}, new(dest.X + 1.5f * style.Scale, dest.Y + 8 * style.Scale), SKColors.White, style.Scale);
-					if (pulseFreeTimeBeat is { Action: PulseActions.Custom, CustomPulse: 7 })
+					if (pulseFreeTimeBeat is { Action: PulseAction.Custom, CustomPulse: 7 })
 						canvas.DrawSlice(hit, SKRect.Create(dest.X - 2 * style.Scale, dest.Y, 5 * style.Scale, info.Bounds.Height * style.Scale));
 					if (hold > 0)
 						canvas.DrawSlice(evbarea,
@@ -547,14 +547,31 @@ public static class Extensions
 				}
 				break;
 		}
-		if (evt is IDurationEvent durationEvent && style.Active)
+		if (evt is IDurationEvent durationEvent && (style.Active || style.ShowDuration))
 		{
 			float duration = durationEvent.Duration;
 			float durwidth = style.Scale * iconSize * duration - destRect.Width;
 			if (durwidth > 0)
-			canvas.DrawSlice(evbarea,
-				SKRect.Create(dest.X + destRect.Width, dest.Y, durwidth, destRect.Height),
-				ColorOf(evt.Tab).WithAlpha(style.Active ? (byte)192 : (byte)91), style.Scale, PatchStyle.Repeat);
+				canvas.DrawSlice(evbarea,
+					SKRect.Create(dest.X + destRect.Width, dest.Y, durwidth, destRect.Height),
+					ColorOf(evt.Tab).WithAlpha(style.Active ? (byte)192 : (byte)91), style.Scale, PatchStyle.Repeat);
+		}
+		if ((evt is IRoomEvent || evt is ISingleRoomEvent) && style.Active)
+		{
+			RDRoom room = evt switch
+			{
+				IRoomEvent roomEvent => roomEvent.Rooms,
+				ISingleRoomEvent singleRoomEvent => singleRoomEvent.Room,
+				_ => throw new NotImplementedException(),
+			};
+			const uint roomEnabled = 0xffd8b811;
+			const uint roomDisabled = 0xff5b5b5b;
+			canvas.DrawSlice("room_0", new(destRect.Right, destRect.Top), room.Contains(RDRoomIndex.Room1) ? roomEnabled : roomDisabled, style.Scale);
+			canvas.DrawSlice("room_1", new(destRect.Right, destRect.Top), room.Contains(RDRoomIndex.Room2) ? roomEnabled : roomDisabled, style.Scale);
+			canvas.DrawSlice("room_2", new(destRect.Right, destRect.Top), room.Contains(RDRoomIndex.Room3) ? roomEnabled : roomDisabled, style.Scale);
+			canvas.DrawSlice("room_3", new(destRect.Right, destRect.Top), room.Contains(RDRoomIndex.Room4) ? roomEnabled : roomDisabled, style.Scale);
+			if (room.Contains(RDRoomIndex.RoomTop))
+				canvas.DrawSlice("room_top", new(destRect.Right, destRect.Top), roomEnabled, style.Scale);
 		}
 		if (evt.Condition.HasValue)
 		{
@@ -698,49 +715,49 @@ public static class Extensions
 		};
 	}
 	private static SKColor ToSKColor(RDColor color) => (uint)color;
-	private static int LengthOf(SayReadyGetSetGoWords words)
+	private static int LengthOf(SayReadyGetSetGoWord words)
 	{
 		return words switch
 		{
-			SayReadyGetSetGoWords.SayReaDyGetSetGoNew or
-			SayReadyGetSetGoWords.SayReaDyGetSetOne or
-			SayReadyGetSetGoWords.SayReadyGetSetGo => 4,
-			SayReadyGetSetGoWords.SayGetSetGo or
-			SayReadyGetSetGoWords.SayGetSetOne => 2,
+			SayReadyGetSetGoWord.SayReaDyGetSetGoNew or
+			SayReadyGetSetGoWord.SayReaDyGetSetOne or
+			SayReadyGetSetGoWord.SayReadyGetSetGo => 4,
+			SayReadyGetSetGoWord.SayGetSetGo or
+			SayReadyGetSetGoWord.SayGetSetOne => 2,
 			_ => 0,
 		};
 	}
-	private static string WordOf(SayReadyGetSetGoWords words)
+	private static string WordOf(SayReadyGetSetGoWord words)
 	{
 		return words switch
 		{
-			SayReadyGetSetGoWords.SayReaDyGetSetGoNew => "Rea, Dy, Get, Set, Go!",
-			SayReadyGetSetGoWords.SayReaDyGetSetOne => "Rea, Dy, Get, Set, One!",
-			SayReadyGetSetGoWords.SayGetSetGo => "Get, Set, Go!",
-			SayReadyGetSetGoWords.SayGetSetOne => "Get, Set, One!",
-			SayReadyGetSetGoWords.JustSayRea => "Rea",
-			SayReadyGetSetGoWords.JustSayDy => "Dy",
-			SayReadyGetSetGoWords.JustSayGet => "Get",
-			SayReadyGetSetGoWords.JustSaySet => "Set",
-			SayReadyGetSetGoWords.JustSayAnd => "And",
-			SayReadyGetSetGoWords.JustSayGo => "Go!",
-			SayReadyGetSetGoWords.JustSayStop => "Stop",
-			SayReadyGetSetGoWords.JustSayAndStop => "And Stop!",
-			SayReadyGetSetGoWords.SaySwitch => "Switch",
-			SayReadyGetSetGoWords.SayWatch => "Watch",
-			SayReadyGetSetGoWords.SayListen => "Listen",
-			SayReadyGetSetGoWords.Count1 => "1",
-			SayReadyGetSetGoWords.Count2 => "2",
-			SayReadyGetSetGoWords.Count3 => "3",
-			SayReadyGetSetGoWords.Count4 => "4",
-			SayReadyGetSetGoWords.Count5 => "5",
-			SayReadyGetSetGoWords.Count6 => "6",
-			SayReadyGetSetGoWords.Count7 => "7",
-			SayReadyGetSetGoWords.Count8 => "8",
-			SayReadyGetSetGoWords.Count9 => "9",
-			SayReadyGetSetGoWords.Count10 => "10",
-			SayReadyGetSetGoWords.SayReadyGetSetGo => "Ready, Get, Set, Go!",
-			SayReadyGetSetGoWords.JustSayReady => "Ready",
+			SayReadyGetSetGoWord.SayReaDyGetSetGoNew => "Rea, Dy, Get, Set, Go!",
+			SayReadyGetSetGoWord.SayReaDyGetSetOne => "Rea, Dy, Get, Set, One!",
+			SayReadyGetSetGoWord.SayGetSetGo => "Get, Set, Go!",
+			SayReadyGetSetGoWord.SayGetSetOne => "Get, Set, One!",
+			SayReadyGetSetGoWord.JustSayRea => "Rea",
+			SayReadyGetSetGoWord.JustSayDy => "Dy",
+			SayReadyGetSetGoWord.JustSayGet => "Get",
+			SayReadyGetSetGoWord.JustSaySet => "Set",
+			SayReadyGetSetGoWord.JustSayAnd => "And",
+			SayReadyGetSetGoWord.JustSayGo => "Go!",
+			SayReadyGetSetGoWord.JustSayStop => "Stop",
+			SayReadyGetSetGoWord.JustSayAndStop => "And Stop!",
+			SayReadyGetSetGoWord.SaySwitch => "Switch",
+			SayReadyGetSetGoWord.SayWatch => "Watch",
+			SayReadyGetSetGoWord.SayListen => "Listen",
+			SayReadyGetSetGoWord.Count1 => "1",
+			SayReadyGetSetGoWord.Count2 => "2",
+			SayReadyGetSetGoWord.Count3 => "3",
+			SayReadyGetSetGoWord.Count4 => "4",
+			SayReadyGetSetGoWord.Count5 => "5",
+			SayReadyGetSetGoWord.Count6 => "6",
+			SayReadyGetSetGoWord.Count7 => "7",
+			SayReadyGetSetGoWord.Count8 => "8",
+			SayReadyGetSetGoWord.Count9 => "9",
+			SayReadyGetSetGoWord.Count10 => "10",
+			SayReadyGetSetGoWord.SayReadyGetSetGo => "Ready, Get, Set, Go!",
+			SayReadyGetSetGoWord.JustSayReady => "Ready",
 			_ => throw new NotImplementedException(),
 		};
 	}
@@ -761,10 +778,11 @@ public static class Extensions
 	}
 	private static SKColor WithState(this SKColor color, bool active, bool enabled) => (enabled ? color : 0xff848484).WithAlpha(active ? (byte)192 : (byte)91);
 }
-public struct IconStyle
+public readonly record struct IconStyle
 {
-	public bool? Enabled;
-	public bool Active;
-	public bool Hover;
-	public int Scale;
+	public readonly bool? Enabled { get; init; }
+	public readonly bool Active { get; init; }
+	public readonly bool Hover { get; init; }
+	public readonly int Scale { get; init; }
+	public readonly bool ShowDuration { get; init; }
 }
