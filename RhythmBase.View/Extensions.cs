@@ -161,7 +161,7 @@ public static class Extensions
 		return result;
 	}
 
-	public static SKRectI DrawEventIcon<TEvent>(this SKCanvas canvas, TEvent evt, SKPointI dest, IconStyle style)
+	public static SKRect DrawEventIcon<TEvent>(this SKCanvas canvas, TEvent evt, SKPoint dest, IconStyle style)
 	where TEvent : IBaseEvent
 	{
 		SKRect destRect = default;
@@ -417,7 +417,7 @@ public static class Extensions
 				}
 				break;
 			default:
-				destRect = SKRectI.Create(dest.X, dest.Y, info.Bounds.Width * style.Scale, info.Bounds.Height * style.Scale);
+				destRect = SKRect.Create(dest.X, dest.Y, info.Bounds.Width * style.Scale, info.Bounds.Height * style.Scale);
 				canvas.DrawBack(destRect, ColorOf(evt.Tab).WithState(style.Active, style.Enabled ?? evt.Active), style.Active, style.Scale);
 				switch (evt)
 				{
@@ -589,7 +589,55 @@ public static class Extensions
 		{
 			canvas.DrawSlice($"{evtag}_0", dest + new SKPointI(0, 8 * style.Scale), 0xffffc786, style.Scale);
 		}
-		return SKRectI.Round(destRect);
+		return destRect;
+	}
+	public static SKRect GetEventIconSize<TEvent>(this TEvent evt, SKPoint dest, IconStyle style)
+	where TEvent : IBaseEvent
+	{
+		SKRect destRect = default;
+		string key = $"event_{evt.Type}";
+		EventType evttype = evt.Type;
+		if (!AssetManager._slices.TryGetValue(key, out SliceInfo info))
+		{
+			if (!AssetManager._slices.TryGetValue($"event_Unknown", out info))
+			{
+				throw new NotImplementedException();
+			}
+		}
+		switch (evt)
+		{
+			case AddClassicBeat addClassicBeat:
+				{
+					float tick = addClassicBeat.Tick;
+					float swing = addClassicBeat.Swing;
+					SetRowXs? prexs = addClassicBeat.Beat.IsEmpty ? null : addClassicBeat.FrontOrDefault<SetRowXs>();
+					if (swing == 0) swing = 1f;
+					destRect = SKRect.Create(dest.X, dest.Y, iconSize * style.Scale * (tick * (addClassicBeat.Length - 1 - (prexs?.SyncoSwing ?? 0))), iconSize * style.Scale);
+				}
+				break;
+			case AddOneshotBeat oneshotBeat:
+				{
+					float tick = oneshotBeat.Tick;
+					float interval = oneshotBeat.Interval;
+					int loop = (int)oneshotBeat.Loops;
+					float delay = oneshotBeat.FreezeBurnMode is OneshotType.Freezeshot ? oneshotBeat.Delay : 0;
+					destRect = SKRect.Create(dest.X, dest.Y, iconSize * style.Scale * (loop * interval + tick + delay), iconSize * style.Scale);
+				}
+				break;
+			case SayReadyGetSetGo sayReadyGetSetGo:
+				{
+					float len = LengthOf(sayReadyGetSetGo.PhraseToSay) * sayReadyGetSetGo.Tick + 1;
+					destRect = SKRect.Create(dest.X, dest.Y, len * iconSize * style.Scale, iconSize * style.Scale);
+				}
+				break;
+			case ReorderRooms or ReorderWindows or ShowRooms or DesktopColor:
+				destRect = SKRect.Create(dest.X, dest.Y, info.Bounds.Width * style.Scale, info.Bounds.Width * 4 * style.Scale);
+				break;
+			default:
+				destRect = SKRect.Create(dest.X, dest.Y, info.Bounds.Width * style.Scale, info.Bounds.Height * style.Scale);
+				break;
+		}
+		return destRect;
 	}
 	internal enum PatchStyle
 	{
