@@ -23,7 +23,7 @@ public static class Extensions
 	private const int iconSize = 14;
 	private const string evtag = "event_tag";
 	private const string evbarea = "event_beat_area";
-	internal static void DrawSlice(this SKCanvas canvas, string src, SKRect dest, int scale = 1, PatchStyle style = PatchStyle.Strentch)
+	internal static void DrawSlice(this SKCanvas canvas, string src, SKRect dest, int scale = 1, PatchStyle style = PatchStyle.Stretch)
 	{
 		if (!AssetManager._slices.TryGetValue(src, out SliceInfo info))
 			return;
@@ -37,7 +37,7 @@ public static class Extensions
 			canvas.DrawImage(AssetManager._assetFile, info.Bounds, dest);
 		}
 	}
-	internal static void DrawSlice(this SKCanvas canvas, string src, SKRect dest, SKColor replace, int scale = 1, PatchStyle style = PatchStyle.Strentch)
+	internal static void DrawSlice(this SKCanvas canvas, string src, SKRect dest, SKColor replace, int scale = 1, PatchStyle style = PatchStyle.Stretch)
 	{
 		if (!AssetManager._slices.TryGetValue(src, out SliceInfo info))
 			return;
@@ -651,9 +651,9 @@ public static class Extensions
 	internal enum PatchStyle
 	{
 		Repeat,
-		Strentch,
+		Stretch,
 	}
-	private static void DrawNinePatch(SKCanvas canvas, SKImage srcBitmap, SliceInfo info, SKRect destRect, SKPaint? paint, int scale = 1, PatchStyle style = PatchStyle.Strentch)
+	private static void DrawNinePatch(SKCanvas canvas, SKImage srcBitmap, SliceInfo info, SKRect destRect, SKPaint? paint, int scale = 1, PatchStyle style = PatchStyle.Stretch)
 	{
 		int sx0 = info.Bounds.Left;
 		int sx3 = info.Bounds.Right;
@@ -735,7 +735,7 @@ public static class Extensions
 
 				switch (style)
 				{
-					case PatchStyle.Strentch:
+					case PatchStyle.Stretch:
 						var srcRect = SKRect.Create(sLeft, sTop, sW, sH);
 						var dstRect = SKRect.Create(dLeft, dTop, dW, dH);
 
@@ -831,7 +831,7 @@ public static class Extensions
 		const string back = "event_back";
 		canvas.DrawSlice(outline, dest, active ? 0xffffffff : 0xffa8a8a8, scale);
 		dest.Inflate(-1 * scale, -1 * scale);
-		canvas.DrawSlice(back, dest, color, scale, PatchStyle.Strentch);
+		canvas.DrawSlice(back, dest, color, scale, PatchStyle.Stretch);
 	}
 	private static SKColor WithState(this SKColor color, bool active, bool enabled) => (enabled ? color : 0xff848484).WithAlpha(active ? (byte)192 : (byte)91);
 }
