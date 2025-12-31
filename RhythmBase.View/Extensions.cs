@@ -102,9 +102,9 @@ public static class Extensions
 		float[] colorMatrix =
 		[
 				0.2126f * tr, 0.7152f * tr, 0.0722f * tr, 0, 0,
-								0.2126f * tg, 0.7152f * tg, 0.0722f * tg, 0, 0,
-								0.2126f * tb, 0.7152f * tb, 0.0722f * tb, 0, 0,
-								0,            0,            0,            ta, 0
+				0.2126f * tg, 0.7152f * tg, 0.0722f * tg, 0, 0,
+				0.2126f * tb, 0.7152f * tb, 0.0722f * tb, 0, 0,
+				0,            0,            0,            ta, 0
 		];
 
 		using SKPaint paint = new()
@@ -230,6 +230,14 @@ public static class Extensions
 					destRect = SKRect.Create(dest.X, dest.Y, iconSize * style.Scale * (loop * interval + tick + delay), iconSize * style.Scale);
 					canvas.DrawBack(destRect, ColorOf(evt.Tab).WithState(style.Active, style.Enabled ?? evt.Active), style.Active, style.Scale);
 					float subdivwidth = iconSize * style.Scale * (subdiv - 1) / subdiv * tick;
+					if(oneshotBeat.Hold)
+					{
+						float holdwidth =  iconSize * style.Scale * (interval - tick - delay) - subdivwidth;
+						if (holdwidth > 0)
+							canvas.DrawSlice(evbarea,
+								SKRect.Create(dest.X + destRect.Width + subdivwidth, dest.Y, holdwidth, info.Bounds.Height * style.Scale),
+								0xffd046f3, style.Scale, PatchStyle.Repeat);
+					}
 					if (subdiv > 1)
 						canvas.DrawSlice(evbarea,
 							SKRect.Create(dest.X + destRect.Width, dest.Y, subdivwidth, info.Bounds.Height * style.Scale),
@@ -275,6 +283,7 @@ public static class Extensions
 								break;
 						}
 					}
+
 					if (style is { Active: true, Hover: true })
 						canvas.DrawSlice("event_beat_loop", new SKPoint(destRect.Right, destRect.Top), style.Scale);
 				}
