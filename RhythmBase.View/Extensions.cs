@@ -34,7 +34,7 @@ public static class Extensions
 		}
 		else
 		{
-			canvas.DrawBitmap(AssetManager._assetFile, info.Bounds, dest);
+			canvas.DrawImage(AssetManager._assetFile, info.Bounds, dest);
 		}
 	}
 	internal static void DrawSlice(this SKCanvas canvas, string src, SKRect dest, SKColor replace, int scale = 1, PatchStyle style = PatchStyle.Strentch)
@@ -69,7 +69,7 @@ public static class Extensions
 		}
 		else
 		{
-			canvas.DrawBitmap(AssetManager._assetFile, info.Bounds, dest, paint);
+			canvas.DrawImage(AssetManager._assetFile, info.Bounds, dest, paint);
 		}
 	}
 	internal static SKRectI DrawSlice(this SKCanvas canvas, string src, SKPoint dest, int scale = 1)
@@ -79,7 +79,7 @@ public static class Extensions
 
 		SKRect destRect = SKRect.Create(dest, new(info.Bounds.Size.Width * scale, info.Bounds.Size.Height * scale));
 		destRect.Offset(-info.Pivot.X * scale, -info.Pivot.Y * scale);
-		canvas.DrawBitmap(AssetManager._assetFile, info.Bounds, destRect);
+		canvas.DrawImage(AssetManager._assetFile, info.Bounds, destRect);
 
 		return SKRectI.Create(info.Bounds.Left, info.Bounds.Top, info.Bounds.Size.Width * scale, info.Bounds.Size.Height * scale);
 	}
@@ -111,7 +111,7 @@ public static class Extensions
 		{
 			ColorFilter = SKColorFilter.CreateColorMatrix(colorMatrix)
 		};
-		canvas.DrawBitmap(AssetManager._assetFile, info.Bounds, destRect, paint);
+		canvas.DrawImage(AssetManager._assetFile, info.Bounds, destRect, paint);
 
 		return SKRectI.Create(info.Bounds.Left, info.Bounds.Top, info.Bounds.Size.Width * scale, info.Bounds.Size.Height * scale);
 	}
@@ -542,7 +542,7 @@ public static class Extensions
 						}
 						break;
 					default:
-						canvas.DrawBitmap(AssetManager._assetFile, info.Bounds, destRect);
+						canvas.DrawImage(AssetManager._assetFile, info.Bounds, destRect);
 						break;
 				}
 				break;
@@ -644,7 +644,7 @@ public static class Extensions
 		Repeat,
 		Strentch,
 	}
-	private static void DrawNinePatch(SKCanvas canvas, SKBitmap srcBitmap, SliceInfo info, SKRect destRect, SKPaint? paint, int scale = 1, PatchStyle style = PatchStyle.Strentch)
+	private static void DrawNinePatch(SKCanvas canvas, SKImage srcBitmap, SliceInfo info, SKRect destRect, SKPaint? paint, int scale = 1, PatchStyle style = PatchStyle.Strentch)
 	{
 		int sx0 = info.Bounds.Left;
 		int sx3 = info.Bounds.Right;
@@ -730,7 +730,7 @@ public static class Extensions
 						var srcRect = SKRect.Create(sLeft, sTop, sW, sH);
 						var dstRect = SKRect.Create(dLeft, dTop, dW, dH);
 
-						canvas.DrawBitmap(srcBitmap, srcRect, dstRect, paint);
+						canvas.DrawImage(srcBitmap, srcRect, dstRect, paint);
 						break;
 					case PatchStyle.Repeat:
 						for (float y = dTop; y < dBottom; y += sH * scale)
@@ -741,7 +741,7 @@ public static class Extensions
 								float tw = Math.Min(sW, (dRight - x) / scale);
 								var sRect = SKRect.Create(sLeft, sTop, tw, th);
 								var dRect = SKRect.Create(x, y, tw * scale, th * scale);
-								canvas.DrawBitmap(srcBitmap, sRect, dRect, paint);
+								canvas.DrawImage(srcBitmap, sRect, dRect, paint);
 							}
 						}
 						break;

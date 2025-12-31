@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Reflection;
 
 namespace RhythmBase.View.Assets;
+
 internal static class AssetManager
 {
 	private const string AssetFilePath = "assets.png";
@@ -11,11 +12,11 @@ internal static class AssetManager
 	private const string LangDirPath = "Lang";
 	private const string ConfigFilePath = "config.yaml";
 	internal static readonly Dictionary<string, SliceInfo> _slices;
-	internal static readonly SKBitmap _assetFile;
+	internal static readonly SKImage _assetFile;
 	static AssetManager()
 	{
 		using Stream stream1 = GetAssemblyStream(AssetFilePath);
-		_assetFile = SKBitmap.Decode(stream1)!;
+		_assetFile = SKImage.FromBitmap(SKBitmap.Decode(stream1)!);
 		using Stream stream2 = GetAssemblyStream(SlicesFilePath);
 		_slices = LoadSlices(stream2);
 	}
@@ -82,13 +83,13 @@ internal static class AssetManager
 		}
 		return sliceInfos;
 	}
-	public static SKColor GetColor(string src, SKPointI offset)
-	{
-		if (!_slices.TryGetValue(src, out SliceInfo info))
-			return SKColors.Transparent;
-		SKPointI pixel = new(info.Bounds.Left + offset.X, info.Bounds.Top + offset.Y);
-		if (pixel.X < info.Bounds.Left || pixel.X >= info.Bounds.Right || pixel.Y < info.Bounds.Top || pixel.Y >= info.Bounds.Bottom)
-			return SKColors.Transparent;
-		return _assetFile.GetPixel(pixel.X, pixel.Y);
-	}
+	//public static SKColor GetColor(string src, SKPointI offset)
+	//{
+	//	if (!_slices.TryGetValue(src, out SliceInfo info))
+	//		return SKColors.Transparent;
+	//	SKPointI pixel = new(info.Bounds.Left + offset.X, info.Bounds.Top + offset.Y);
+	//	if (pixel.X < info.Bounds.Left || pixel.X >= info.Bounds.Right || pixel.Y < info.Bounds.Top || pixel.Y >= info.Bounds.Bottom)
+	//		return SKColors.Transparent;
+	//	return _assetFile.GetPixel(pixel.X, pixel.Y);
+	//}
 }
