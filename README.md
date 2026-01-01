@@ -5,50 +5,10 @@
 
 # RhythmBase.View
 
+[Go to Core Library](https://github.com/RDCN-Community-Developers/RhythmToolkit)
+
 This library renders Rhythm Doctor events with [SkiaSharp](https://github.com/mono/SkiaSharp).  
 See the [example](#example) below for a quick usage sketch.
-
-| Project             | Description                                         | Status           | Link                                                                       | 
-|---------------------|-----------------------------------------------------|------------------|----------------------------------------------------------------------------|
-| RhythmBase          | Core library for level editing.                     | WIP              | [Go There](https://github.com/RDCN-Community-Developers/RhythmToolkit)                      |
-| RhythmBase.View     | Draw all Rhythm Doctor event elements in SkiaSharp. | WIP              | **You are here**                                                           |
-| RhythmBase.Addition | Extensions for levels.                              | *Not disclosed*  | -                                                                          |
-| RhythmBase.Interact | Interact with Level editor.                         | *Not disclosed*  | -                                                                          |
-| RhythmBase.Hospital | Judgement logic for levels.                         | *Not disclosed*  | -                                                                          |
-| RhythmBase.Lite     | Lightweight version of RhythmBase.                  | WIP              | [Go there](https://github.com/RDCN-Community-Developers/RhythmToolkitLite) |
-| RhythmBase.Control  | Custom controls.                                    | *Not disclosed*  | -                                                                          |
-
-```mermaid
-flowchart RL
-RBLite[RhythmBase.Lite]
-subgraph RD[Rhythm Doctor]
-	RDLE[Rhythm Doctor Level Editor]
-end
-subgraph AD[Adofai]
-	ADLE[Adofai Level Editor]
-end
-RDL([Rhythm Doctor Level])
-ADL([Adofai Level])
-subgraph RBTitle[RhythmBase]
-	RB[RhythmBase]
-	RBAdd[RhythmBase.Addition]
-	RBInt[RhythmBase.Interact]
-	RBHos[RhythmBase.Hospital]
-	RBV[RhythmBase.View]
-	subgraph RBC[RhythmBase.Control]
-		RBCCore[RhythmBase.Control.Core]
-		RBCWPF[RhythmBase.Control.WPF]
-		RBCWF[RhythmBase.Control.WinForm]
-		RBCAva[RhythmBase.Control.Avalonia]
-	end
-end
-
-RBLite ---> RDL
-RBCWPF & RBCWF & RBCAva --> RBCCore --> RBV
-RBV & RBHos & RBAdd & RBInt --> RB ---> RDL & ADL
-RBInt ---> RDLE --> RDL
-RBInt ---> ADLE --> ADL
-```
 
 # Example
 
@@ -66,10 +26,13 @@ using SKCanvas canvas = new(bitmap);
 
 foreach (var e in level)
 {
-	canvas.DrawEventIcon(e, ToLocation(e),   // Provided by this library.
-		false,                               // The event is not selected.
-		2                                    // The scale of the event.
-	);                                       // Returns the hit area used for selection.
+	canvas.DrawEventIcon(e, ToLocation(e), new() { // Provided by this library.
+		Scale = 2,
+		Active = true,
+		Enabled = true,
+		Hover = false,
+		ShowDuration = true,
+	});
 }
 
 static SKPointI ToLocation(IBaseEvent e)
