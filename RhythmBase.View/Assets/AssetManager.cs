@@ -8,7 +8,7 @@ namespace RhythmBase.View.Assets;
 internal static class AssetManager
 {
 	private const string AssetFilePath = "assets.png";
-	private const string SlicesFilePath = "assets.json";
+	private const string SlicesFilePath = "assets";
 	private const string LangDirPath = "Lang";
 	private const string ConfigFilePath = "config.yaml";
 	internal static readonly Dictionary<string, SliceInfo> _slices;
@@ -18,68 +18,52 @@ internal static class AssetManager
 		using Stream stream1 = GetAssemblyStream(AssetFilePath);
 		_assetFile = SKImage.FromBitmap(SKBitmap.Decode(stream1)!);
 		using Stream stream2 = GetAssemblyStream(SlicesFilePath);
-		_slices = LoadSlices(stream2);
+		_slices = ReadFromStream(stream2);
 	}
 	private static Stream GetAssemblyStream(string path)
 	{
 		Assembly assembly = Assembly.GetExecutingAssembly();
 		return assembly.GetManifestResourceStream($"RhythmBase.View.Assets.{path}")!;
 	}
-	public static Dictionary<string, SliceInfo> LoadSlices(Stream stream)
+	static Dictionary<string, SliceInfo> ReadFromStream(Stream stream)
 	{
-		JsonDocument document = JsonDocument.Parse(stream);
-		var slices = document.RootElement.GetProperty("meta").GetProperty("slices");
+		BinaryReader reader = new(stream);
+		int count = reader.ReadByte();
 		Dictionary<string, SliceInfo> sliceInfos = [];
-		foreach (var slice in slices.EnumerateArray())
+		for (int i = 0; i < count; i++)
 		{
-			string name = slice.GetProperty("name").GetString() ?? "";
-			var keys = slice.GetProperty("keys");
-			foreach (var key in keys.EnumerateArray())
+			SliceInfo info = new SliceInfo();
+			int keyLength = reader.ReadByte();
+			string key = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(keyLength));
+			int left = reader.ReadByte();
+			int top = reader.ReadByte();
+			short wh = reader.ReadInt16();
+			int width = wh & 0x1F;
+			int height = (wh >> 5) & 0x3F;
+			info.Bounds = SKRectI.Create(left, top, width, height);
+			bool hasCenter = (wh & 0x8000) != 0;
+			bool hasPivot = (wh & 0x4000) != 0;
+			if (hasCenter)
 			{
-				int frame = key.GetProperty("frame").GetInt32();
-				var boundsProp = key.GetProperty("bounds");
-				SKRectI bounds = SKRectI.Create(
-					boundsProp.GetProperty("x").GetInt32(),
-					boundsProp.GetProperty("y").GetInt32(),
-					boundsProp.GetProperty("w").GetInt32(),
-					boundsProp.GetProperty("h").GetInt32()
-				);
-				SliceInfo sliceInfo = new()
-				{
-					Bounds = bounds,
-				};
-				if (key.TryGetProperty("center", out var centerProp))
-				{
-					SKRectI center = SKRectI.Create(
-						centerProp.GetProperty("x").GetInt32(),
-						centerProp.GetProperty("y").GetInt32(),
-						centerProp.GetProperty("w").GetInt32(),
-						centerProp.GetProperty("h").GetInt32()
-					);
-					sliceInfo.Center = center;
-				}
-				if (key.TryGetProperty("pivot", out var pivotProp))
-				{
-					SKPointI pivot = new(
-						pivotProp.GetProperty("x").GetInt32(),
-						pivotProp.GetProperty("y").GetInt32()
-					);
-					sliceInfo.Pivot = pivot;
-				}
-				if (slice.TryGetProperty("data", out var dataProp))
-				{
-					string data = dataProp.GetString() ?? "";
-					if (data.Length >= 3)
-						sliceInfo.Scale = data[0..3] switch
-						{
-							"@2x" => 2,
-							_ => 1,
-						};
-					if (data.Length > 3)
-						sliceInfo.HasSpace = data[3] is 'T';
-				}
-				sliceInfos[name] = sliceInfo;
+				byte centerByte = reader.ReadByte();
+				int centerLeft = centerByte & 0x3;
+				int centerTop = (centerByte >> 2) & 0x3;
+				int centerWidth = (centerByte >> 4) & 0x3;
+				int centerHeight = (centerByte >> 6) & 0x3;
+				info.Center = SKRectI.Create(centerLeft, centerTop, centerWidth, centerHeight);
 			}
+			if (hasPivot)
+			{
+				byte pivotByte = reader.ReadByte();
+				int pivotLeft = pivotByte & 0x7;
+				int pivotTop = (pivotByte >> 3) & 0x7;
+				if ((pivotByte & 0x80) != 0)
+					pivotLeft = -pivotLeft;
+				if ((pivotByte & 0x40) != 0)
+					pivotTop = -pivotTop;
+				info.Pivot = new SKPointI(pivotLeft, pivotTop);
+			}
+			sliceInfos[key] = info;
 		}
 		return sliceInfos;
 	}

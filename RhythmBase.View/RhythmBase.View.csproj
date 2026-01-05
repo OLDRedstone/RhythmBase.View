@@ -1,39 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <Version>1.0.1</Version>
-    <Authors>obugs</Authors>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>RhythmBase.View</Title>
-    <Description>Draw all Rhythm Doctor event elements in SkiaSharp.</Description>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/OLDRedstone/RhythmBase.View</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Version>1.0.1</Version>
+		<Authors>obugs</Authors>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>RhythmBase.View</Title>
+		<Description>Draw all Rhythm Doctor event elements in SkiaSharp.</Description>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/OLDRedstone/RhythmBase.View</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<LangVersion>preview</LangVersion>
+		<UserSecretsId>80eb137e-559e-4c02-ae76-bd1a18fc277b</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Assets\assets.json" />
-    <None Remove="Assets\assets.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Assets\assets" />
+		<None Remove="Assets\assets.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\assets.json" />
-    <EmbeddedResource Include="Assets\assets.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Assets\assets" />
+		<EmbeddedResource Include="Assets\assets.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="..\README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="RhythmBase" Version="1.3.3" />
-    <PackageReference Include="SkiaSharp" Version="3.119.1" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="RhythmBase" Version="1.3.3" />
+		<PackageReference Include="SkiaSharp" Version="3.119.1" />
+	</ItemGroup>
 
 </Project>

@@ -373,7 +373,7 @@ public static class Extensions
 						else
 						{
 							lw += w + sw;
-							stringToDraw[^1] += ' ' + part;
+							stringToDraw[stringToDraw.Count - 1] += ' ' + part;
 						}
 					}
 					stringToDraw = [.. stringToDraw.Take(3)];
@@ -456,7 +456,13 @@ public static class Extensions
 							float pleft = (moveRoom.Pivot?.X ?? 0) / 100f;
 							float ptop = 1f - (moveRoom.Pivot?.Y ?? 0) / 100f;
 							if (width == 0 || height == 0) break;
-							float uniform = float.Sqrt(width * width + height * height);
+							float uniform =
+#if NET8_0_OR_GREATER
+								float.Sqrt
+#else
+								(float)Math.Sqrt
+#endif
+								(width * width + height * height);
 							width /= uniform;
 							height /= uniform;
 							canvas.Translate(dest.X + destRect.Width / 2, dest.Y + destRect.Height / 2);
@@ -835,11 +841,11 @@ public static class Extensions
 	}
 	private static SKColor WithState(this SKColor color, bool active, bool enabled) => (enabled ? color : 0xff848484).WithAlpha(active ? (byte)192 : (byte)91);
 }
-public readonly record struct IconStyle
+public	record 	struct IconStyle
 {
-	public readonly bool? Enabled { get; init; }
-	public readonly bool Active { get; init; }
-	public readonly bool Hover { get; init; }
-	public readonly int Scale { get; init; }
-	public readonly bool ShowDuration { get; init; }
+	public bool? Enabled { get; set; }
+	public bool Active { get; set; }
+	public bool Hover { get; set; }
+	public int Scale { get; set; }
+	public bool ShowDuration { get; set; }
 }
