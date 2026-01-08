@@ -13,12 +13,17 @@ internal static class AssetManager
 	private const string ConfigFilePath = "config.yaml";
 	internal static readonly Dictionary<string, SliceInfo> _slices;
 	internal static readonly SKImage _assetFile;
+	public static readonly SKColor[] Colors;
 	static AssetManager()
 	{
 		using Stream stream1 = GetAssemblyStream(AssetFilePath);
-		_assetFile = SKImage.FromBitmap(SKBitmap.Decode(stream1)!);
+		_assetFile = SKImage.FromEncodedData(stream1);
 		using Stream stream2 = GetAssemblyStream(SlicesFilePath);
 		_slices = ReadFromStream(stream2);
+		using SKBitmap bitmap = SKBitmap.FromImage(_assetFile);
+		Colors = new SKColor[7];
+		for (int i = 0; i < 7; i++)
+			Colors[i] = GetColor(bitmap, "tab_colors", new(0, i));
 	}
 	private static Stream GetAssemblyStream(string path)
 	{
@@ -32,7 +37,7 @@ internal static class AssetManager
 		Dictionary<string, SliceInfo> sliceInfos = [];
 		for (int i = 0; i < count; i++)
 		{
-			SliceInfo info = new SliceInfo();
+			SliceInfo info = new();
 			int keyLength = reader.ReadByte();
 			string key = System.Text.Encoding.UTF8.GetString(reader.ReadBytes(keyLength));
 			int left = reader.ReadByte();
@@ -67,13 +72,13 @@ internal static class AssetManager
 		}
 		return sliceInfos;
 	}
-	//public static SKColor GetColor(string src, SKPointI offset)
-	//{
-	//	if (!_slices.TryGetValue(src, out SliceInfo info))
-	//		return SKColors.Transparent;
-	//	SKPointI pixel = new(info.Bounds.Left + offset.X, info.Bounds.Top + offset.Y);
-	//	if (pixel.X < info.Bounds.Left || pixel.X >= info.Bounds.Right || pixel.Y < info.Bounds.Top || pixel.Y >= info.Bounds.Bottom)
-	//		return SKColors.Transparent;
-	//	return _assetFile.GetPixel(pixel.X, pixel.Y);
-	//}
+	public static SKColor GetColor(SKBitmap bitmap, string src, SKPointI offset)
+	{
+		if (!_slices.TryGetValue(src, out SliceInfo info))
+			return SKColors.Transparent;
+		SKPointI pixel = new(info.Bounds.Left + offset.X, info.Bounds.Top + offset.Y);
+		if (pixel.X < info.Bounds.Left || pixel.X >= info.Bounds.Right || pixel.Y < info.Bounds.Top || pixel.Y >= info.Bounds.Bottom)
+			return SKColors.Transparent;
+		return bitmap.GetPixel(pixel.X, pixel.Y);
+	}
 }

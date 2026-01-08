@@ -23,6 +23,7 @@ public static class Extensions
 	private const int iconSize = 14;
 	private const string evtag = "event_tag";
 	private const string evbarea = "event_beat_area";
+	public static readonly SKColor[] Colors = AssetManager.Colors;
 	internal static void DrawSlice(this SKCanvas canvas, string src, SKRect dest, int scale = 1, PatchStyle style = PatchStyle.Stretch)
 	{
 		if (!AssetManager._slices.TryGetValue(src, out SliceInfo info))
@@ -606,7 +607,7 @@ public static class Extensions
 		}
 		return destRect;
 	}
-	public static SKRect GetEventIconSize<TEvent>(this TEvent evt, SKPoint dest, IconStyle style)
+	public static SKRect MeasureEventIcon<TEvent>(this TEvent evt, SKPoint dest, IconStyle style)
 	where TEvent : IBaseEvent
 	{
 		SKRect destRect = default;
@@ -768,13 +769,13 @@ public static class Extensions
 	{
 		return tab switch
 		{
-			Tab.Sounds => 0xffd82433,
-			Tab.Rows => 0xff2c4fd9,
-			Tab.Actions => 0xffc543b3,
-			Tab.Rooms => 0xffd8b812,
-			Tab.Decorations => 0xff00c459,
-			Tab.Windows => 0xff50b5d7,
-			Tab.Unknown or _ => 0xff848484,
+			Tab.Sounds => AssetManager.Colors[0],
+			Tab.Rows => AssetManager.Colors[1],
+			Tab.Actions => AssetManager.Colors[2],
+			Tab.Rooms => AssetManager.Colors[3],
+			Tab.Decorations => AssetManager.Colors[4],
+			Tab.Windows => AssetManager.Colors[5],
+			Tab.Unknown or _ => AssetManager.Colors[6],
 		};
 	}
 	private static SKColor ToSKColor(RDColor color) => (uint)color;
