@@ -9,8 +9,6 @@ internal static class AssetManager
 {
 	private const string AssetFilePath = "assets.png";
 	private const string SlicesFilePath = "assets";
-	private const string LangDirPath = "Lang";
-	private const string ConfigFilePath = "config.yaml";
 	internal static readonly Dictionary<string, SliceInfo> _slices;
 	internal static readonly SKImage _assetFile;
 	public static readonly SKColor[] Colors;
@@ -21,9 +19,9 @@ internal static class AssetManager
 		using Stream stream2 = GetAssemblyStream(SlicesFilePath);
 		_slices = ReadFromStream(stream2);
 		using SKBitmap bitmap = SKBitmap.FromImage(_assetFile);
-		Colors = new SKColor[7];
-		for (int i = 0; i < 7; i++)
-			Colors[i] = GetColor(bitmap, "tab_colors", new(0, i));
+		Colors = new SKColor[8];
+		for (int i = 0; i < 8; i++)
+			Colors[i] = GetColor(bitmap, "tab_colors", new(i, 0));
 	}
 	private static Stream GetAssemblyStream(string path)
 	{

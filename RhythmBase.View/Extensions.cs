@@ -116,10 +116,6 @@ public static class Extensions
 
 		return SKRectI.Create(info.Bounds.Left, info.Bounds.Top, info.Bounds.Size.Width * scale, info.Bounds.Size.Height * scale);
 	}
-	private static readonly ReadOnlyEnumCollection<EventType> _beatTypes = new(2,
-		EventType.AddFreeTimeBeat,
-		EventType.PulseFreeTimeBeat
-	);
 	public static int MeasureRDFontText(this SKCanvas canvas, char c, int scale = 1)
 	{
 		if (c == '\n')
@@ -184,7 +180,7 @@ public static class Extensions
 		const string beatsynco = "event_beat_synco";
 		const string beatline = "event_beat_line";
 
-		const uint beatcolor = 0xff60e345;
+		SKColor beatcolor = AssetManager.Colors[7];
 		switch (evt)
 		{
 			case AddClassicBeat addClassicBeat:
@@ -211,7 +207,7 @@ public static class Extensions
 				{
 					float hold = addFreeTimeBeat.Hold - info.Bounds.Width / iconSize;
 					destRect = SKRect.Create(dest.X, dest.Y, info.Bounds.Width * style.Scale, info.Bounds.Height * style.Scale);
-					canvas.DrawBack(destRect, new SKColor(beatcolor).WithState(style.Active, style.Enabled ?? evt.Active), style.Active, style.Scale);
+					canvas.DrawBack(destRect, beatcolor.WithState(style.Active, style.Enabled ?? evt.Active), style.Active, style.Scale);
 					canvas.DrawRDFontText((addFreeTimeBeat.Pulse + 1).ToString(), new(dest.X + 1.5f * style.Scale, dest.Y + 10 * style.Scale), SKColors.White, style.Scale);
 					if (addFreeTimeBeat.Pulse == 6)
 						canvas.DrawSlice(hit, new SKPoint(dest.X, dest.Y), style.Scale);
@@ -318,7 +314,7 @@ public static class Extensions
 				{
 					float hold = pulseFreeTimeBeat.Hold - info.Bounds.Width / iconSize;
 					destRect = SKRect.Create(dest.X, dest.Y, info.Bounds.Width * style.Scale, info.Bounds.Height * style.Scale);
-					canvas.DrawBack(destRect, new SKColor(beatcolor).WithState(style.Active, style.Enabled ?? evt.Active), style.Active, style.Scale);
+					canvas.DrawBack(destRect, beatcolor.WithState(style.Active, style.Enabled ?? evt.Active), style.Active, style.Scale);
 					canvas.DrawRDFontText(pulseFreeTimeBeat.Action switch
 					{
 						PulseAction.Increment => ">",
