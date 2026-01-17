@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="JsonCompress/JsonCompress.csproj" Id="10b3b3fb-a662-4d39-9d2c-2ac1e040e4fe" />
   <Project Path="RhythmBase.View.Test1/RhythmBase.View.Test1.csproj" />
   <Project Path="RhythmBase.View/RhythmBase.View.csproj" />
 </Solution>
