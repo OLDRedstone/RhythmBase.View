@@ -126,7 +126,6 @@ const hiddenEventType = [
     EventType.ForwardEvent,
     EventType.ForwardRowEvent,
     EventType.MacroEvent,
-    EventType.SpinningRows,
     EventType.ShowSubdivisionsRows,
 ];
 enum EventAttriblte {
