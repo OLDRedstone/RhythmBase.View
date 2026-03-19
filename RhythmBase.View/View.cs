@@ -4,6 +4,7 @@ using RhythmBase.Global.Events;
 using RhythmBase.RhythmDoctor.Extensions;
 using RhythmBase.RhythmDoctor.Components;
 using RhythmBase.RhythmDoctor.Events;
+using RhythmBase.RhythmDoctor;
 using RhythmBase.View.Assets;
 using SkiaSharp;
 using System;
@@ -202,7 +203,7 @@ public static class View
 				{
 					float tick = oneshotBeat.Tick;
 					float interval = oneshotBeat.Interval;
-					int loop = (int)oneshotBeat.Loops;
+					int loop = (int)oneshotBeat.Loop;
 					int subdiv = oneshotBeat.Subdivisions;
 					float delay = oneshotBeat.FreezeBurnMode is OneshotType.Freezeshot ? oneshotBeat.Delay : 0;
 					destRect = SKRect.Create(0, 0, iconSize * (loop * interval + tick + delay), iconSize);
@@ -548,8 +549,8 @@ public static class View
 		}
 		if (evt.Condition.HasValue)
 		{
-			bool hasTrue = evt.Condition.ConditionLists.Any(i => i.Value);
-			bool hasFalse = evt.Condition.ConditionLists.Any(i => !i.Value);
+			bool hasTrue = evt.Condition.Indices.Any(i => evt.Condition[i] == true);
+			bool hasFalse = evt.Condition.Indices.Any(i => evt.Condition[i] == false);
 			if (hasTrue)
 				if (hasFalse)
 					canvas.DrawSlice(evtag, dest, 0xffffff00);
@@ -596,7 +597,7 @@ public static class View
 				{
 					float tick = oneshotBeat.Tick;
 					float interval = oneshotBeat.Interval;
-					int loop = (int)oneshotBeat.Loops;
+					int loop = (int)oneshotBeat.Loop;
 					float delay = oneshotBeat.FreezeBurnMode is OneshotType.Freezeshot ? oneshotBeat.Delay : 0;
 					dest = new(iconSize * (loop * interval + tick + delay), iconSize);
 				}
