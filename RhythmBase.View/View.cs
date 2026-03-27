@@ -765,7 +765,7 @@ public static class View
 		//	}
 		//}
 	}
-	internal static SKColor ColorOf(Tab tab)
+	public static SKColor ColorOf(Tab tab)
 	{
 		return tab switch
 		{
