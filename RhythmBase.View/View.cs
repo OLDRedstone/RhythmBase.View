@@ -175,8 +175,6 @@ public static class View
 					if (style.Hover)
 						for (int i = 0; i < addClassicBeat.Length - 1; i++)
 						{
-							Console.WriteLine(iconSize * (tick *
-(i + i % 2 * (1 - swing) - (i <= (prexs?.SyncoBeat ?? -1) ? 0 : (prexs?.SyncoSwing ?? 0)))));
 							canvas.DrawSlice(pulse,
 							new SKPoint(iconSize * (tick *
 (i + i % 2 * (1 - swing) - (i <= (prexs?.SyncoBeat ?? -1) ? 0 : (prexs?.SyncoSwing ?? 0)))), 0));
@@ -314,9 +312,11 @@ public static class View
 				break;
 			case SayReadyGetSetGo sayReadyGetSetGo:
 				{
-					float len = LengthOf(sayReadyGetSetGo.PhraseToSay) * sayReadyGetSetGo.Tick + 1;
+                    float len = LengthOf(sayReadyGetSetGo.PhraseToSay) * sayReadyGetSetGo.Tick + 1;
 					destRect = SKRect.Create(0, 0, len * iconSize, iconSize);
 					canvas.DrawBack(destRect, ColorOf(evt.Tab), style);
+					canvas.Save();
+					canvas.Scale(0.5f, 0.5f);
 					string[] stringToJoin = WordOf(sayReadyGetSetGo.PhraseToSay).Split(' ');
 					List<string> stringToDraw = [stringToJoin[0]];
 					int lw = canvas.MeasureRDFontText(stringToJoin[0]);
@@ -325,7 +325,7 @@ public static class View
 					{
 						string? part = stringToJoin[i];
 						int w = canvas.MeasureRDFontText(part);
-						if (lw + w + sw > (len * iconSize - 2) * style.Scale)
+						if (lw + w + sw > (len * iconSize  * 2 - 2) * style.Scale)
 						{
 							lw = w;
 							stringToDraw.Add(part);
@@ -333,7 +333,7 @@ public static class View
 						else
 						{
 							lw += w + sw;
-							stringToDraw[stringToDraw.Count - 1] += ' ' + part;
+                            stringToDraw[stringToDraw.Count - 1] += ' ' + part;
 						}
 					}
 					stringToDraw = [.. stringToDraw.Take(3)];
@@ -343,11 +343,12 @@ public static class View
 					{
 						string line = stringToDraw[i];
 						SKPoint p = new(
-							(len * iconSize - canvas.MeasureRDFontText(line, style.Scale / 2)) / 2,
+							(len * iconSize * 2 - canvas.MeasureRDFontText(line, style.Scale / 2)) / 2,
 							top + (i * charHeight + lineHeight) * style.Scale / 2);
 						canvas.DrawRDFontText(line, p,
 							SKColors.White, style.Scale / 2);
 					}
+					canvas.Restore();
 				}
 				break;
 			case SetRowXs setRowXs:
@@ -473,7 +474,7 @@ public static class View
 						break;
 					case SetCrotchetsPerBar setCrotchetsPerBar:
 						int cpb = setCrotchetsPerBar.CrotchetsPerBar;
-						canvas.DrawSlice(key, dest);
+						canvas.DrawSlice(key, default(SKPoint));
 						canvas.DrawRDFontText(cpb > 9 ? "-" : cpb.ToString(), new(2, 7), SKColors.Black);
 						canvas.DrawRDFontText("4", new(8, 12), SKColors.Black);
 						break;
@@ -561,7 +562,7 @@ public static class View
 		}
 		if (!string.IsNullOrEmpty(evt.Tag))
 		{
-			canvas.DrawSlice($"{evtag}_0", dest + new SKPointI(0, 8), 0xffffc786);
+			canvas.DrawSlice($"{evtag}_0", new SKPointI(0, iconSize), 0xffffc786);
 		}
 		canvas.Restore();
 		destRect.Right *= style.Scale;
