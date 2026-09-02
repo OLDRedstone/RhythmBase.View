@@ -33,10 +33,10 @@ using SkiaSharp;
 
 // Define canvas dimensions
 int height = 28 * 60;
-string file = @"your\level.rdlevel";
+string file = @"your\level.Level";
 
 // Load the level
-using RDLevel level = RDLevel.FromFile(file);
+using Level level = Level.FromFile(file);
 int width = (int)(level.Length.BeatOnly * 28);
 Console.WriteLine($"Level duration: {level.Length.TimeSpan}");
 
@@ -59,7 +59,7 @@ foreach (var e in level)
 static SKPointI ToLocation(IBaseEvent e)
 {
 	return new SKPointI(
-		(int)(e.Beat.BeatOnly * 28),
+		(int)(e.TickTime.BeatOnly * 28),
 		e.Y * 28
 	);
 }
