@@ -19,6 +19,41 @@ internal static class AssetManager
 		using Stream stream2 = GetAssemblyStream(SlicesFilePath);
 		_slices = ReadFromStream(stream2);
 		using SKBitmap bitmap = SKBitmap.FromImage(_assetFile);
+		foreach (var slice in _slices.Values.Where(i => i.IsNinePatch))
+		{
+			if (slice.IsNinePatch)
+			{
+				slice.NinePatchImages = new SKImage[9];
+				slice.NinePatchShaders = new SKShader[9];
+				int[] xs = [0, slice.Center.Left, slice.Center.Right, slice.Bounds.Width];
+				int[] ys = [0, slice.Center.Top, slice.Center.Bottom, slice.Bounds.Height];
+				for (int i = 0; i < 9; i++)
+				{
+					int col = i % 3;
+					int row = i / 3;
+					if (xs[col + 1] - xs[col] == 0 || ys[row + 1] - ys[row] == 0)
+						continue;
+					SKRectI subset = new(xs[col], ys[row], xs[col + 1], ys[row + 1]);
+					subset.Offset(slice.Bounds.Left, slice.Bounds.Top);
+					var sub = _assetFile.Subset(subset);
+					SKShader shader = SKShader.CreateImage(
+						sub,
+						SKShaderTileMode.Repeat,
+						SKShaderTileMode.Repeat);
+					slice.NinePatchImages[i] = sub;
+					slice.NinePatchShaders[i] = shader;
+				}
+			}
+			else
+			{
+				var sub = _assetFile.Subset(slice.Bounds);
+				slice.Image = sub;
+				slice.Shader = SKShader.CreateImage(
+					sub,
+					SKShaderTileMode.Repeat,
+					SKShaderTileMode.Repeat);
+			}
+		}
 		Colors = new SKColor[8];
 		for (int i = 0; i < 8; i++)
 			Colors[i] = GetColor(bitmap, "tab_colors", new(i, 0));

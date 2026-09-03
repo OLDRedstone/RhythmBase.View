@@ -50,7 +50,10 @@ public static class View
 
 		using SKPaint paint = new();
 		if (replace is SKColor color)
+		{
 			paint.ColorFilter = CreateFilter(color);
+			paint.Color = color;
+		}
 
 		if (info.IsNinePatch)
 		{
@@ -637,147 +640,45 @@ public static class View
 		Repeat,
 		Stretch,
 	}
-	private static void DrawNinePatch(SKCanvas canvas, SKImage srcBitmap, SliceInfo info, SKSize dest, SKPaint? paint, float scale = 1, PatchStyle style = PatchStyle.Stretch)
+	private static void DrawNinePatch(SKCanvas canvas, SKImage srcImage, SliceInfo info, SKSize dest, SKPaint? paint, float scale = 1, PatchStyle style = PatchStyle.Stretch)
 	{
 		int[] srcXs = [0, info.Center.Left, info.Center.Right, info.Bounds.Width];
 		int[] srcYs = [0, info.Center.Top, info.Center.Bottom, info.Bounds.Height];
 		float[] dstXs = [0, info.Center.Left, dest.Width - (info.Bounds.Width - info.Center.Right), dest.Width];
 		float[] dstYs = [0, info.Center.Top, dest.Height - (info.Bounds.Height - info.Center.Bottom), dest.Height];
-		for (int row = 0; row < 3; row++)
+
+		for (int i = 0; i < 9; i++)
 		{
-			for (int col = 0; col < 3; col++)
+			int col = i % 3;
+			int row = i / 3;
+			int srcWidth = srcXs[row + 1] - srcXs[row];
+			int srcHeight = srcYs[col + 1] - srcYs[col];
+			float dstWidth = dstXs[row + 1] - dstXs[row];
+			float dstHeight = dstYs[col + 1] - dstYs[col];
+			if (srcWidth <= 0 || srcHeight <= 0 || dstWidth <= 0 || dstHeight <= 0)
+				continue;
+
+			SKRectI srcRect = new(srcXs[row], srcYs[col], srcXs[row + 1], srcYs[col + 1]);
+			SKRect dstRect = new(dstXs[row], dstYs[col], dstXs[row + 1], dstYs[col + 1]);
+			srcRect.Offset(info.Bounds.Location);
+			bool isCenter = (row == 1 && col == 1);
+			if (isCenter)
 			{
-				int srcWidth = srcXs[row + 1] - srcXs[row];
-				int srcHeight = srcYs[col + 1] - srcYs[col];
-				float dstWidth = dstXs[row + 1] - dstXs[row];
-				float dstHeight = dstYs[col + 1] - dstYs[col];
-				if (srcWidth <= 0 || srcHeight <= 0 || dstWidth <= 0 || dstHeight <= 0)
-					continue;
-				SKRectI srcRect = new(srcXs[row], srcYs[col], srcXs[row + 1], srcYs[col + 1]);
-				SKRect dstRect = new(dstXs[row], dstYs[col], dstXs[row + 1], dstYs[col + 1]);
-				srcRect.Offset(info.Bounds.Location);
-				if (row == 1 && col == 1 && (dstRect.Width > 0 || dstRect.Height > 0) && style is PatchStyle.Repeat)
-				{
-					for (float x = 0; x < dstWidth; x += srcWidth)
-					{
-						float tw = Math.Min(srcWidth, dstWidth - x);
-						for (float y = 0; y < dstHeight; y += srcHeight)
-						{
-							float th = Math.Min(srcHeight, dstHeight - y);
-							var sRect = SKRectI.Create(srcRect.Left, srcRect.Top, (int)tw, (int)th);
-							var dRect = SKRect.Create(dstRect.Left + x, dstRect.Top + y, tw, th);
-							canvas.DrawImage(srcBitmap, sRect, dRect, paint);
-						}
-					}
-				}
-				else
-				{
-					canvas.DrawImage(srcBitmap, srcRect, dstRect, paint);
-				}
+				var subImage = info.NinePatchImages[i];
+				if (subImage == null) continue;
+
+				using var shader = SKShader.CreateImage(subImage, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
+				using var shaderPaint = new SKPaint();
+				shaderPaint.Shader = shader;
+				shaderPaint.Color = paint.Color;
+				shaderPaint.ColorFilter = paint.ColorFilter;
+				canvas.DrawRect(dstRect, shaderPaint);
+			}
+			else
+			{
+				canvas.DrawImage(srcImage, srcRect, dstRect, paint);
 			}
 		}
-		//int sx0 = info.Bounds.Left;
-		//int sx3 = info.Bounds.Right;
-		//int sy0 = info.Bounds.Top;
-		//int sy3 = info.Bounds.Bottom;
-
-		//int sx1 = sx0 + info.Center.Left;
-		//int sx2 = sx0 + info.Center.Right;
-		//int sy1 = sy0 + info.Center.Top;
-		//int sy2 = sy0 + info.Center.Bottom;
-
-		//int swLeft = sx1 - sx0;
-		//int swCenter = sx2 - sx1;
-		//int swRight = sx3 - sx2;
-
-		//int shTop = sy1 - sy0;
-		//int shCenter = sy2 - sy1;
-		//int shBottom = sy3 - sy2;
-
-		//float dwLeft = swLeft * Math.Max(1, scale);
-		//float dwRight = swRight * Math.Max(1, scale);
-		//float dwCenter = destRect.Width - dwLeft - dwRight;
-		//if (dwCenter < 0)
-		//{
-		//	float scaleX = (float)destRect.Width / Math.Max(1, swLeft + swRight);
-		//	dwLeft = Math.Max(0, (int)Math.Round(swLeft * scaleX));
-		//	dwRight = Math.Max(0, destRect.Width - dwLeft);
-		//	dwCenter = 0;
-		//}
-
-		//float dhTop = shTop * Math.Max(1, scale);
-		//float dhBottom = shBottom * Math.Max(1, scale);
-		//float dhCenter = destRect.Height - dhTop - dhBottom;
-		//if (dhCenter < 0)
-		//{
-		//	float scaleY = (float)destRect.Height / Math.Max(1, shTop + shBottom);
-		//	dhTop = Math.Max(0, (int)Math.Round(shTop * scaleY));
-		//	dhBottom = Math.Max(0, destRect.Height - dhTop);
-		//	dhCenter = 0;
-		//}
-
-		//int[] srcXs = [sx0, sx1, sx2, sx3];
-		//int[] srcYs = [sy0, sy1, sy2, sy3];
-
-		//float dx0 = destRect.Left;
-		//float dx1 = dx0 + dwLeft;
-		//float dx2 = dx1 + dwCenter;
-		//float dx3 = destRect.Right;
-
-		//float dy0 = destRect.Top;
-		//float dy1 = dy0 + dhTop;
-		//float dy2 = dy1 + dhCenter;
-		//float dy3 = destRect.Bottom;
-
-		//float[] dstXs = [dx0, dx1, dx2, dx3];
-		//float[] dstYs = [dy0, dy1, dy2, dy3];
-
-		//for (int row = 0; row < 3; row++)
-		//{
-		//	for (int col = 0; col < 3; col++)
-		//	{
-		//		int sLeft = srcXs[col];
-		//		int sTop = srcYs[row];
-		//		int sRight = srcXs[col + 1];
-		//		int sBottom = srcYs[row + 1];
-		//		int sW = sRight - sLeft;
-		//		int sH = sBottom - sTop;
-		//		if (sW <= 0 || sH <= 0)
-		//			continue;
-
-		//		float dLeft = dstXs[col];
-		//		float dTop = dstYs[row];
-		//		float dRight = dstXs[col + 1];
-		//		float dBottom = dstYs[row + 1];
-		//		float dW = dRight - dLeft;
-		//		float dH = dBottom - dTop;
-		//		if (dW <= 0 || dH <= 0)
-		//			continue;
-
-		//		switch (style)
-		//		{
-		//			case PatchStyle.Stretch:
-		//				var srcRect = SKRect.Create(sLeft, sTop, sW, sH);
-		//				var dstRect = SKRect.Create(dLeft, dTop, dW, dH);
-
-		//				canvas.DrawImage(srcBitmap, srcRect, dstRect, paint);
-		//				break;
-		//			case PatchStyle.Repeat:
-		//				for (float y = dTop; y < dBottom; y += sH * scale)
-		//				{
-		//					float th = Math.Min(sH, (dBottom - y) / scale);
-		//					for (float x = dLeft; x < dRight; x += sW * scale)
-		//					{
-		//						float tw = Math.Min(sW, (dRight - x) / scale);
-		//						var sRect = SKRect.Create(sLeft, sTop, tw, th);
-		//						var dRect = SKRect.Create(x, y, tw * scale, th * scale);
-		//						canvas.DrawImage(srcBitmap, sRect, dRect, paint);
-		//					}
-		//				}
-		//				break;
-		//		}
-		//	}
-		//}
 	}
 	public static SKColor ColorOf(Tab tab)
 	{
