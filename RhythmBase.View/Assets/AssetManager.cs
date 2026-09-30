@@ -114,4 +114,27 @@ internal static class AssetManager
 			return SKColors.Transparent;
 		return bitmap.GetPixel(pixel.X, pixel.Y);
 	}
+	public static SKRectI[] GetSrcRects(string srcName)
+	{
+		if (!_slices.TryGetValue(srcName, out SliceInfo info))
+			return [];
+		if (info.IsNinePatch)
+		{
+			SKRectI[] rects = new SKRectI[9];
+			int[] xs = [0, info.Center.Left, info.Center.Right, info.Bounds.Width];
+			int[] ys = [0, info.Center.Top, info.Center.Bottom, info.Bounds.Height];
+			for (int i = 0; i < 9; i++)
+			{
+				int col = i % 3;
+				int row = i / 3;
+				rects[i] = new SKRectI(xs[col], ys[row], xs[col + 1], ys[row + 1]);
+				rects[i].Offset(info.Bounds.Left, info.Bounds.Top);
+			}
+			return rects;
+		}
+		else
+		{
+			return [info.Bounds];
+		}
+	}
 }

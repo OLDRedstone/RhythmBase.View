@@ -4,7 +4,7 @@
 		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Version>1.0.4-alpha1</Version>
+		<Version>1.0.5</Version>
 		<Authors>obugs</Authors>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Title>RhythmBase.View</Title>
@@ -34,8 +34,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RhythmBase.RhythmDoctor" Version="1.3.11-alpha9-snapshot.20260828135818" />
-		<PackageReference Include="SkiaSharp" Version="3.119.2" />
+		<PackageReference Include="RhythmBase.RhythmDoctor" Version="1.3.12-snapshot.20260927074152" />
+		<PackageReference Include="SkiaSharp" Version="4.153.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+	  <PackageReference Include="OpenTK">
+	    <Version>4.9.4</Version>
+	  </PackageReference>
 	</ItemGroup>
 
 </Project>

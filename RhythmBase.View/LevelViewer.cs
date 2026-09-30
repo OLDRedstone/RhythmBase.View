@@ -79,8 +79,7 @@ public static class LevelViewer
 	}
 	public static void ProcessDefault(string filepath)
 	{
-		Level level = Level.FromFile(filepath);
-		Chart chart = level.MainChart;
+		Chart chart = Chart.FromFile(filepath);
 		Filter filter = Filter.All;
 		RenderData data = GetRenderData(chart, filter);
 
@@ -307,17 +306,19 @@ public static class LevelViewer
 			tabTop[tab] = top;
 			top += range.MaxY - range.MinY + 1;
 		}
+		List<(IBaseEvent evt, SKPoint dest, IconStyleConfig config)> icons = [];
 		foreach (var e in renderData.Events)
 		{
-			canvas.DrawEventIcon(e, ToLocation(e, start.Tick, renderData.TabDataCol[e.Tab].MinY - tabTop[e.Tab]), new()
+			icons.Add((e, ToLocation(e, start.Tick, renderData.TabDataCol[e.Tab].MinY - tabTop[e.Tab]), new()
 			{
 				Scale = pixelSize,
 				ShowDuration = true,
 				Active = false,
 				Hover = e is AddClassicBeat,
 				Enabled = e.Active,
-			});
+			}));
 		}
+		canvas.DrawEventIcons(icons);
 	}
 	private static SKPointI ToLocation(IBaseEvent e, float left, int top)
 	{

@@ -12,11 +12,29 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace RhythmBase.View;
 
-
-public static class View
+file readonly record struct BackState
+{
+	public Tab Tab { get; init; }
+	public int Width { get; init; }//px
+	public int Height { get; init; }//px
+}
+file readonly record struct EventState
+{
+	public IconStyle Style { get; init; }
+	public float Tick { get; init; }// AddClassicBeat.Tick, AddOneshotBeat.Tick
+	public float Swing { get; init; }// AddClassicBeat.Swing
+}
+file readonly record struct DurationState
+{
+	public Tab Tab { get; init; }
+	public float Duration { get; init; }//min(dur,1)-1
+	public int Height { get; init; }//px
+}
+public static partial class View
 {
 	private const int lineHeight = 6;
 	private const int charHeight = 8;
@@ -126,16 +144,17 @@ public static class View
 		}
 		return result;
 	}
-
-	public static SKRect DrawEventIcon<TEvent>(this SKCanvas canvas, TEvent evt, SKPoint dest, IconStyle style)
+	public static SKRect DrawEventIcon<TEvent>(this SKCanvas canvas, TEvent evt, SKPoint dest, IconStyleConfig config)
 	where TEvent : IBaseEvent
 	{
 		canvas.Save();
 		canvas.Translate(dest.X, dest.Y);
-		canvas.Scale(style.Scale, style.Scale);
 		SKRect destRect = default;
 		string key = $"event_{evt.Type}";
 		EventType evttype = evt.Type;
+		IconStyle style = config.WithEventState(evt);
+		canvas.Scale(style.Scale, style.Scale);
+
 		if (!AssetManager._slices.TryGetValue(key, out SliceInfo info))
 		{
 			if (!AssetManager._slices.TryGetValue($"event_Unknown", out info))
@@ -431,7 +450,7 @@ public static class View
 							}
 							float uniform =
 #if NET8_0_OR_GREATER
-                                float.Sqrt
+																float.Sqrt
 #else
 	(float)Math.Sqrt
 #endif
@@ -478,7 +497,7 @@ public static class View
 										break;
 									SKBitmap bitmap = SKBitmap.Decode(path);
 									SKRect imgDest = SKRect.Create(-info2.Pivot.X, -info2.Pivot.Y, info2.Bounds.Width, info2.Bounds.Height);
-									canvas.DrawBitmap(bitmap, imgDest, new SKPaint()
+									canvas.DrawBitmap(bitmap, imgDest, SKSamplingOptions.Default, new SKPaint()
 									{
 										ColorFilter = SKColorFilter.CreateBlendMode(ToSKColor(setBackgroundColor.Color), SKBlendMode.SrcOver)
 									});
@@ -503,11 +522,15 @@ public static class View
 							SKBitmap bitmap = SKBitmap.Decode(path);
 							SKRect imgDest = SKRect.Create(-info2.Pivot.X, -info2.Pivot.Y, info2.Bounds.Width, info2.Bounds.Height);
 							canvas.DrawRect(imgDest, new SKPaint() { Color = ToSKColor(setForeground.Color), Style = SKPaintStyle.Fill });
-							canvas.DrawBitmap(bitmap, imgDest, new SKPaint()
+							canvas.DrawBitmap(bitmap, imgDest, SKSamplingOptions.Default, new SKPaint()
 							{
 								ColorFilter = SKColorFilter.CreateBlendMode(ToSKColor(setForeground.Color), SKBlendMode.SrcOver)
 							});
 						}
+						break;
+					case SetText setText:
+						canvas.DrawSlice($"{key}_0", SKPoint.Empty, ToSKColor(setText.Color));
+						canvas.DrawSlice($"{key}_1", SKPoint.Empty, ToSKColor(setText.OutlineColor));
 						break;
 					case Tint tint:
 						canvas.DrawSlice(key, SKPoint.Empty, ToSKColor(tint.TintColor));
@@ -533,13 +556,21 @@ public static class View
 								break;
 						}
 						break;
+					case TintText tintText:
+						if (tintText.TintColor is PaletteColorWithAlpha tintColor)
+							canvas.DrawSlice($"{key}_0", SKPoint.Empty, ToSKColor(tintColor));
+						else
+							canvas.DrawSlice($"{key}_0", SKPoint.Empty, SKColors.White);
+						if(tintText.BorderColor is PaletteColorWithAlpha borderColor)
+							canvas.DrawSlice($"{key}_1", SKPoint.Empty, ToSKColor(borderColor));
+						break;
 					default:
-						canvas.DrawImage(AssetManager._assetFile, info.Bounds, destRect);
+						canvas.DrawImage(AssetManager._assetFile, info.Bounds, destRect, SKSamplingOptions.Default);
 						break;
 				}
 				break;
 		}
-		if (evt is IDurationEvent durationEvent && ((style.Enabled ?? evt.Active) && (style.Active || style.ShowDuration)))
+		if (evt is IDurationEvent durationEvent && ((style.Enabled) && (style.Active || style.ShowDuration)))
 		{
 			float duration = durationEvent.Duration;
 			float durwidth = iconSize * duration - destRect.Width;
@@ -772,7 +803,7 @@ public static class View
 	}
 	private static void DrawBack(this SKCanvas canvas, SKRect dest, SKColor color, IconStyle style)
 	{
-		color = color.WithState(style.Active, style.Enabled ?? true);
+		color = color.WithState(style.Active, style.Enabled);
 		const string outline = "event_outline";
 		const string back = "event_back";
 		canvas.DrawSlice(outline, dest, (SKColor)(style.Active ? 0xffffffff : 0xffa8a8a8));
@@ -781,9 +812,28 @@ public static class View
 	}
 	private static SKColor WithState(this SKColor color, bool active, bool enabled) => (enabled ? color : 0xff848484).WithAlpha(active ? (byte)192 : (byte)91);
 }
-public record struct IconStyle
+public record struct IconStyleConfig
 {
 	public bool? Enabled { get; set; }
+	public bool Active { get; set; }
+	public bool Hover { get; set; }
+	public int Scale { get; set; }
+	public bool ShowDuration { get; set; }
+	public IconStyle WithEventState(IBaseEvent e)
+	{
+		return new IconStyle
+		{
+			Enabled = Enabled ?? e.Active,
+			Active = Active,
+			Hover = Hover,
+			Scale = Scale,
+			ShowDuration = e is IDurationEvent d && d.Duration > 1,
+		};
+	}
+}
+public record struct IconStyle
+{
+	public bool Enabled { get; set; }
 	public bool Active { get; set; }
 	public bool Hover { get; set; }
 	public int Scale { get; set; }
