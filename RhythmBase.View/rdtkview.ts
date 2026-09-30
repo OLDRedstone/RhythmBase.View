@@ -6,6 +6,7 @@ import {
     Point,
     Rect,
     Size,
+    SliceInfo,
     slices,
 } from "./assetManager.ts";
 import {
@@ -329,33 +330,38 @@ function measureRDFontText(text: string): number {
 
 function createRDFontLayer(
     text: string,
+    destX: number,
+    destY: number,
     style: IconStyle,
     color: Color | null,
+    textScale: number = 1,
+    canvasScale: number = 1,
 ): HTMLLayerElement {
-    const lineHead = new Point(0, -charHeight);
-    const start = lineHead.clone();
     const layer = document.createElement("div") as HTMLLayerElement;
     const charLayers: HTMLLayerElement[] = [];
     layer.style.position = "absolute";
-    for (let i = 0; i < text.length; i++) {
-        const char = text.charAt(i);
-        if (char === "\n") {
-            start.x = lineHead.x;
-            start.y += lineHeight * style.scale;
-        } else {
-            const charCode = char.charCodeAt(0);
-            const charKey = `char_${charCode.toString(16).padStart(4, "0")}`;
-            const charInfo = slices.get(charKey);
-            if (charInfo) {
-                const charLayer = createLayerFromBackground(
-                    charKey,
-                    new Point(start.x, start.y),
-                    color,
-                    style,
-                );
-                start.x += (charInfo.bounds.width) * style.scale;
-
-                charLayers.push(...charLayer);
+    const start = new Point(destX, destY - lineHeight * textScale);
+    const devScale = textScale * style.scale * canvasScale;
+    if (devScale > 0) {
+        for (let i = 0; i < text.length; i++) {
+            const char = text.charAt(i);
+            if (char === "\n") {
+                start.x = destX;
+                start.y += lineHeight * textScale;
+            } else {
+                const charCode = char.charCodeAt(0);
+                const charKey = `char_${charCode.toString(16).padStart(4, "0")}`;
+                const charInfo = slices.get(charKey);
+                if (charInfo) {
+                    const charLayer = createLayerFromBackground(
+                        charKey,
+                        new Point(start.x / textScale, start.y / textScale),
+                        color,
+                        { ...style, scale: devScale },
+                    );
+                    start.x += charInfo.bounds.width * textScale;
+                    charLayers.push(...charLayer);
+                }
             }
         }
     }
@@ -367,6 +373,33 @@ function createRDFontLayer(
     charLayers.forEach((cl) => {
         layer.appendChild(cl);
     });
+    return layer;
+}
+
+function createImageLayer(
+    path: string,
+    info: SliceInfo,
+    color: Color | null,
+    style: IconStyle,
+): HTMLLayerElement {
+    const layer = document.createElement("div") as HTMLLayerElement;
+    layer.filterData = new FilterData();
+    layer.updateFilter = () => {
+        layer.style.filter = layer.filterData.getFilter();
+    };
+    layer.style.position = "absolute";
+    layer.style.left = `${-info.pivot.x * style.scale}px`;
+    layer.style.top = `${-info.pivot.y * style.scale}px`;
+    layer.style.width = `${info.bounds.width * style.scale}px`;
+    layer.style.height = `${info.bounds.height * style.scale}px`;
+    layer.style.backgroundSize = "100% 100%";
+    layer.style.backgroundRepeat = "no-repeat";
+    const overlay = color && !Color.White.equals(color)
+        ? `linear-gradient(${color.toRgbaString()}, ${
+            color.toRgbaString()
+        }), `
+        : "";
+    layer.style.backgroundImage = `${overlay}url(${path})`;
     return layer;
 }
 
@@ -635,7 +668,6 @@ function createElementEvent(
                 const holdWidth = hold
                     ? iconSize * (interval - tick - delay)
                     : 0;
-                console.log(holdWidth, subdivWidth);
                 const holdLayer = hold && (holdWidth - subdivWidth) > 0
                     ? createLayerFromBackground(
                         evbarea,
@@ -645,7 +677,7 @@ function createElementEvent(
                             holdWidth - subdivWidth,
                             iconSize,
                         ),
-                        new Color(style.enabled ? 0xffd046f3 : 0xff6f6f6f),
+                        new Color(0xffd046f3),
                         style,
                         true,
                     )
@@ -658,7 +690,7 @@ function createElementEvent(
                     ? createLayerFromBackground(
                         evbarea,
                         new Rect(eventWidth, 0, subdivWidth, iconSize),
-                        new Color(style.enabled ? 0xff13B021 : 0xff6f6f6f),
+                        new Color(0xff13B021),
                         style,
                         true,
                     )
@@ -677,7 +709,7 @@ function createElementEvent(
                                 Math.max(subdivWidth, holdWidth),
                             iconSize,
                         ),
-                        new Color(style.enabled ? 0xffc53b3b : 0xff6f6f6f),
+                        new Color(0xffc53b3b),
                         style,
                         true,
                     )
@@ -855,11 +887,11 @@ function createElementEvent(
                     : [];
                 const textLayer = createRDFontLayer(
                     ((obj.pulse as number ?? 0) + 1).toString(),
+                    1.5,
+                    10,
                     style,
-                    null,
+                    Color.White,
                 );
-                textLayer.style.left = `${1.5 * style.scale}px`;
-                textLayer.style.top = `${10 * style.scale}px`;
                 layersToAdd.push(...holdLayer);
                 layersToAdd.push(...backLayers);
                 layersToAdd.push(...hitLayer);
@@ -934,10 +966,16 @@ function createElementEvent(
                     beatColor,
                     style,
                 );
-                const hitLayer = obj.pulse === 6
+                const hitLayer = obj.action === "Custom" &&
+                        (obj.customPulse as number ?? 0) === 7
                     ? createLayerFromBackground(
                         hit,
-                        new Point(0, 0),
+                        new Rect(
+                            -2,
+                            0,
+                            5,
+                            slcinfo.bounds.height,
+                        ),
                         null,
                         style,
                     )
@@ -961,11 +999,11 @@ function createElementEvent(
 
                 const textLayer = createRDFontLayer(
                     text,
+                    1.5,
+                    8,
                     style,
-                    null,
+                    Color.White,
                 );
-                textLayer.style.left = `${1.5 * style.scale}px`;
-                textLayer.style.top = `${10 * style.scale}px`;
                 layersToAdd.push(...holdLayer);
                 layersToAdd.push(...backLayers);
                 layersToAdd.push(...hitLayer);
@@ -982,7 +1020,7 @@ function createElementEvent(
                 );
                 const orderLayers: HTMLLayerElement[] = [];
                 const order = obj.order as number[] ?? [0, 1, 2, 3];
-                for (let i = 0; i < order.length; i++) {
+                for (let i = 0; i < Math.min(order.length, 4); i++) {
                     {
                         const orderLayer = createLayerFromBackground(
                             `${key}_${order[i]}`,
@@ -1018,29 +1056,32 @@ function createElementEvent(
                 for (let i = 1; i < stringToJoin.length; i++) {
                     const part = stringToJoin[i];
                     const w = measureRDFontText(part);
-                    if (lw + sw + w > (len * iconSize) * style.scale) {
+                    if (lw + w + sw > (len * iconSize * 2 - 2) * style.scale) {
                         lw = w;
                         stringToDraw.push(part);
                     } else {
-                        lw += sw + w;
+                        lw += w + sw;
                         stringToDraw[stringToDraw.length - 1] += " " + part;
                     }
                 }
                 const c = Math.min(stringToDraw.length, 3);
-                let top = iconSize / 2 - charHeight * c / 4 + 1;
+                const textScale = Math.trunc(style.scale / 2);
+                const top = (iconSize - charHeight * c / 2) * style.scale / 2;
                 for (let i = 0; i < c; i++) {
                     const line = stringToDraw[i];
-                    const p = new Point(
-                        (len * iconSize - measureRDFontText(line) / 2) / 2,
-                        top + (i * charHeight + lineHeight) / 2,
-                    );
+                    const px = (len * iconSize * 2 -
+                        measureRDFontText(line) * textScale) / 2;
+                    const py = top +
+                        (i * charHeight + lineHeight) * style.scale / 2;
                     const wordLayer = createRDFontLayer(
                         line,
-                        { ...style, scale: style.scale / 2 },
-                        null,
+                        px,
+                        py,
+                        style,
+                        Color.White,
+                        textScale,
+                        0.5,
                     );
-                    wordLayer.style.left = `${p.x * style.scale}px`;
-                    wordLayer.style.top = `${p.y * style.scale}px`;
                     wordLayers.push(wordLayer);
                 }
                 layersToAdd.push(...backLayers);
@@ -1261,6 +1302,26 @@ function createElementEvent(
                         }
                     }
                     break;
+                case EventType.SetText:
+                    {
+                        const textColorLayer = createLayerFromBackground(
+                            `${key}_0`,
+                            null,
+                            Color.FromRgba(obj.color as string ?? "FFFFFFFF"),
+                            style,
+                        );
+                        const outlineColorLayer = createLayerFromBackground(
+                            `${key}_1`,
+                            null,
+                            Color.FromRgba(
+                                obj.outlineColor as string ?? "FFFFFFFF",
+                            ),
+                            style,
+                        );
+                        layersToAdd.push(...textColorLayer);
+                        layersToAdd.push(...outlineColorLayer);
+                    }
+                    break;
                 case EventType.PaintHands:
                 case EventType.Tint:
                 case EventType.TintRows:
@@ -1292,6 +1353,28 @@ function createElementEvent(
                         layersToAdd.push(...foreColorLayer);
                     }
                     break;
+                case EventType.TintText:
+                    {
+                        const tintColorLayer = createLayerFromBackground(
+                            `${key}_0`,
+                            null,
+                            obj.tintColor
+                                ? Color.FromRgba(obj.tintColor as string)
+                                : Color.White,
+                            style,
+                        );
+                        const borderColorLayer = obj.borderColor
+                            ? createLayerFromBackground(
+                                `${key}_1`,
+                                null,
+                                Color.FromRgba(obj.borderColor as string),
+                                style,
+                            )
+                            : [];
+                        layersToAdd.push(...tintColorLayer);
+                        layersToAdd.push(...borderColorLayer);
+                    }
+                    break;
                 case EventType.SetBackgroundColor:
                     {
                         const backType =
@@ -1316,31 +1399,19 @@ function createElementEvent(
                             ),
                             style,
                         );
-                        const contentLayer = backType === "Image"
-                            ? createLayerFromBackground(
-                                "",
-                                contentInfo?.bounds
-                                    ? new Rect(contentInfo?.bounds.size)
-                                    : null,
-                                null,
-                                style,
-                            )
+                        const contentLayer = backType === "Image" && imagePath &&
+                                contentInfo
+                            ? [
+                                createImageLayer(
+                                    imagePath,
+                                    contentInfo,
+                                    Color.FromRgba(
+                                        obj.color as string ?? "FFFFFFFF",
+                                    ),
+                                    style,
+                                ),
+                            ]
                             : [];
-                        contentLayer.forEach((contentLayer) => {
-                            if (backType === "Image" && contentLayer) {
-                                contentLayer.style.backgroundImage =
-                                    `url(${imagePath})`;
-                                contentLayer.style.left = `${
-                                    -(contentInfo?.pivot.x ?? 0) *
-                                    style.scale
-                                }px`;
-                                contentLayer.style.top = `${
-                                    -(contentInfo?.pivot.y ?? 0) *
-                                    style.scale
-                                }px`;
-                            }
-                            return contentLayer;
-                        });
                         layersToAdd.push(...iconLayer);
                         layersToAdd.push(...colorLayer);
                         layersToAdd.push(...contentLayer);
@@ -1357,18 +1428,18 @@ function createElementEvent(
                         );
                         const cpbLayer = createRDFontLayer(
                             cpb > 9 ? "-" : cpb.toString(),
+                            2,
+                            7,
                             style,
                             Color.Black,
                         );
-                        cpbLayer.style.left = `${2 * style.scale}px`;
-                        cpbLayer.style.top = `${9 * style.scale}px`;
                         const bLayer = createRDFontLayer(
                             "4",
+                            8,
+                            12,
                             style,
                             Color.Black,
                         );
-                        bLayer.style.left = `${8 * style.scale}px`;
-                        bLayer.style.top = `${14 * style.scale}px`;
                         layersToAdd.push(...iconLayer);
                         layersToAdd.push(cpbLayer);
                         layersToAdd.push(bLayer);
@@ -1385,47 +1456,25 @@ function createElementEvent(
                         const images = (obj.image as string[]) ?? [];
                         const imagePath = images.length > 0 ? images[0] : "";
                         const contentInfo = slices.get(`${key}_1`);
-                        const colorLayer = imagePath
-                            ? createLayerFromBackground(
-                                `${key}_0`,
-                                null,
-                                Color.Black,
-                                style,
-                            )
+                        const contentLayer = imagePath && contentInfo
+                            ? [
+                                createImageLayer(
+                                    imagePath,
+                                    contentInfo,
+                                    Color.FromRgba(
+                                        obj.color as string ?? "FFFFFFFF",
+                                    ),
+                                    style,
+                                ),
+                            ]
                             : [];
-                        const contentLayer = imagePath
-                            ? createLayerFromBackground(
-                                "",
-                                contentInfo?.bounds
-                                    ? new Rect(contentInfo?.bounds.size)
-                                    : null,
-                                null,
-                                style,
-                            )
-                            : [];
-                        contentLayer.forEach((contentLayer) => {
-                            if (contentLayer) {
-                                contentLayer.style.backgroundImage =
-                                    `url(${imagePath})`;
-                                contentLayer.style.left = `${
-                                    -(contentInfo?.pivot.x ?? 0) *
-                                    style.scale
-                                }px`;
-                                contentLayer.style.top = `${
-                                    -(contentInfo?.pivot.y ?? 0) *
-                                    style.scale
-                                }px`;
-                            }
-                            return contentLayer;
-                        });
                         layersToAdd.push(...iconLayer);
-                        layersToAdd.push(...colorLayer);
                         layersToAdd.push(...contentLayer);
                     }
                     break;
                 default:
                     const layer = createLayerFromBackground(
-                        hasType ? key : "event_Unknown",
+                        key0,
                         null,
                         null,
                         style,
@@ -1435,10 +1484,11 @@ function createElementEvent(
             }
             break;
     }
-    if (evinfo.isDurationEvent) {
+    if (evinfo.isDurationEvent && style.enabled) {
         const duration = obj[evinfo.durationKey] as number ?? 0;
         const durWidth = iconSize * duration;
-        const durationLayer = durWidth > slcinfo.bounds.width
+        const durationLayer = (style.active || duration > 1) &&
+                durWidth > slcinfo.bounds.width
             ? createLayerFromBackground(
                 evbarea,
                 new Rect(
@@ -1447,7 +1497,9 @@ function createElementEvent(
                     durWidth - slcinfo.bounds.width,
                     slcinfo.bounds.height,
                 ),
-                colorOf(obj.tab as Tab ?? evinfo.defaultTab),
+                colorOf(obj.tab as Tab ?? evinfo.defaultTab).withAlpha(
+                    style.active ? 192 : 91,
+                ),
                 style,
                 true,
             )
@@ -1508,7 +1560,7 @@ function createElementEvent(
     const tagLayer = obj.tag
         ? createLayerFromBackground(
             `${evtag}_0`,
-            new Point(0, slcinfo.bounds.height),
+            new Point(0, iconSize),
             new Color(0xffffc786),
             style,
         )

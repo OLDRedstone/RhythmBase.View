@@ -34,7 +34,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="RhythmBase.RhythmDoctor" Version="1.3.12-snapshot.20260927074152" />
+		<PackageReference Include="RhythmBase.RhythmDoctor" Version="1.3.12-snapshot.20260930032643" />
 		<PackageReference Include="SkiaSharp" Version="4.153.0" />
 	</ItemGroup>
 

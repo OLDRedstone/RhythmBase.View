@@ -52,7 +52,7 @@
 { "bar": 4, "beat": 3, "y": 3, "type": "ChangeCharacter", "row": 0, "character": "Samurai", "transition": "Instant" },
 { "bar": 4, "beat": 5, "y": 2, "type": "ShowRooms", "rooms": [1, 3], "heights": [0, 0, 0, 0], "transitionTime": 1, "ease": "InOutSine" },
 { "bar": 4, "beat": 6, "y": 6, "type": "RenameWindow", "action": "Set", "text": "Minecraft 1.21.1 NeoForge" },
-{ "bar": 4, "beat": 7, "y": 2, "type": "SetVFXPreset", "rooms": [0], "preset": "Vignette", "enable": true },
+{ "bar": 4, "beat": 7, "y": 2, "type": "SetVfxPreset", "rooms": [0], "preset": "Vignette", "enable": true },
 { "bar": 4, "beat": 7, "y": 3, "type": "PlaySound", "sound": {"filename": "Shaker"}, "customSoundType": "CueSound" },
 { "bar": 4, "beat": 7, "y": 4, "type": "SetTheme", "rooms": [0], "preset": "None", "skipPaintEffects": false },
 { "bar": 4, "beat": 7, "y": 5, "type": "SetRoomContentMode", "mode": "Center" },
